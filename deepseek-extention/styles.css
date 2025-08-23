@@ -1,0 +1,249 @@
+/* 基础按钮样式 */
+#deepseek-btn {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-size: 80%; /* 图标缩小到80%，留出更多空白 */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 10000;
+  transition: all 0.3s ease;
+  user-select: none;
+  /* 添加可变大小的自定义属性 */
+  --btn-size: 60px;
+  width: var(--btn-size);
+  height: var(--btn-size);
+}
+
+/* 暗黑模式下的按钮样式 */
+@media (prefers-color-scheme: dark) {
+  #deepseek-btn {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+  }
+  
+  #deepseek-btn:hover {
+    background-color: #3d3d3d;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* 手动添加暗黑模式类 */
+.dark-mode #deepseek-btn {
+  background-color: #2d2d2d !important;
+  border-color: #404040 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.dark-mode #deepseek-btn:hover {
+  background-color: #3d3d3d !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+#deepseek-btn:hover {
+  transform: scale(1.05); /* 悬停时轻微放大 */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+#deepseek-btn:active {
+  transform: scale(0.98); /* 点击时轻微缩小 */
+}
+
+/* 大小控制面板样式 */
+.size-controls {
+  position: fixed;
+  display: none;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+/* 暗黑模式下的大小控制面板 */
+@media (prefers-color-scheme: dark) {
+  .size-controls {
+    background: rgba(45, 45, 45, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.dark-mode .size-controls {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.size-controls.show {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 大小按钮样式 */
+.size-btn {
+  background: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #333;
+  min-width: 60px;
+}
+
+.size-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.size-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+/* 暗黑模式下的大小按钮 */
+@media (prefers-color-scheme: dark) {
+  .size-btn {
+    background: #404040;
+    color: #ffffff;
+  }
+  
+  .size-btn:hover {
+    background: #505050;
+  }
+  
+  .size-btn.active {
+    background: #0056b3;
+  }
+}
+
+.dark-mode .size-btn {
+  background: #404040 !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .size-btn:hover {
+  background: #505050 !important;
+}
+
+.dark-mode .size-btn.active {
+  background: #0056b3 !important;
+}
+
+/* 聊天窗口样式 */
+#chat-iframe {
+  position: fixed;
+  width: 400px;
+  height: 600px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+/* 暗黑模式下的聊天窗口 */
+@media (prefers-color-scheme: dark) {
+  #chat-iframe {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    background: #1a1a1a;
+    border: 1px solid #404040;
+  }
+}
+
+.dark-mode #chat-iframe {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  background: #1a1a1a !important;
+  border: 1px solid #404040 !important;
+}
+
+/* 响应式设计 - 在小屏幕上调整聊天窗口大小 */
+@media (max-width: 768px) {
+  #chat-iframe {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 100px);
+    max-width: 400px;
+    max-height: 600px;
+  }
+}
+
+@media (max-height: 700px) {
+  #chat-iframe {
+    height: calc(100vh - 80px);
+    max-height: 500px;
+  }
+}
+
+/* 添加一些视觉增强效果 */
+.size-controls::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid rgba(255, 255, 255, 0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  .size-controls::before {
+    border-bottom-color: rgba(45, 45, 45, 0.95);
+  }
+}
+
+.dark-mode .size-controls::before {
+  border-bottom-color: rgba(45, 45, 45, 0.95) !important;
+}
+
+/* 优化按钮文字在暗黑模式下的显示 */
+#deepseek-btn[data-text="true"] {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 添加加载状态样式 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #666;
+  z-index: 10000;
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+  }
+}
+
+.dark-mode .loading-overlay {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
+}
