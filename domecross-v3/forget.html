@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-cn"ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>{{websitename}} {{banben}} - 密码重置</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">   
+    <link href="css/log.css" rel="stylesheet">
+</head>
+
+<body ng-controller="forget">
+<div class="container text-center margin_top_20">
+    <img class="logo_img" src="" /><span class="title">{{websitename}}</span>
+</div>
+<div class="container text-center margin_top_15">
+    <span class="info">快速提升您的開發測試效率</span>
+</div>
+
+<div class="container margin_top_20">
+
+    <div class="core">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active tab_core_active tab_core text-center"><a href="#forget"  aria-controls="forget" role="tab" data-toggle="tab"><b>密码重置</b></a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active " id="forget">
+                <!--注册-->
+                <form name="forgetForm"  class="inside_form" novalidate>
+                    <div class="form-group" ng-class="{'has-success' : !forgetForm.myEmail.$pristine && forgetForm.myEmail.$valid, 'has-error' : !forgetForm.myEmail.$pristine && forgetForm.myEmail.$invalid }">
+                        <label for="exampleInputEmail1">邮箱</label>
+                        <span ng-show="forgetForm.myEmail.$dirty && forgetForm.myEmail.$invalid" class="pull-right tishi">
+                            邮箱格式不符合规范
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="text" id="forget_email" name="myEmail" ng-model="myEmail" maxlength="25"  class="form-control input-lg" ng-pattern="/^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9\-]+@([a-zA-Z0-9\-]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="form-group" ng-class="{'has-success' : !forgetForm.password.$pristine && forgetForm.password.$valid, 'has-error' : !forgetForm.password.$pristine && forgetForm.password.$invalid }">
+                        <label for="exampleInputPass">设置新密码</label>
+                        <span ng-show="forgetForm.password.$dirty && forgetForm.password.$invalid" class="pull-right tishi">
+                            密码最小6位,最大20位
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="password" id="forget_password" minlength="6" maxlength="20" ng-model="password" name="password" class="form-control input-lg" placeholder="请输入密码" required>
+                    </div>
+
+
+                    <div class="form-group" ng-class="{'has-success' : !forgetForm.passwordagain.$pristine && forgetForm.passwordagain.$valid, 'has-error' : !forgetForm.passwordagain.$pristine && forgetForm.passwordagain.$invalid }">
+                        <label for="exampleInputPassAgain">验证码</label>
+                        <span ng-show="(forgetForm.passwordagain.$dirty && forgetForm.passwordagain.$invalid) || verify" class="pull-right tishi">
+                            {{verify_msg}}
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" id="forget_verify"  minlength="8" maxlength="8" ng-pattern="/^[0-9a-zA-Z]*$/" ng-model="passwordagain" name="passwordagain" class="form-control input-lg" placeholder="请输入验证码"  veritycode required/>
+                            </div>
+                            <div  class="col-md-6">
+                                <button type="button" class="btn btn-primary margin_top5" ng-disabled="verify_send" verifyforget>发送验证码至邮箱</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <button type="submit" id="forgetFormsub" class="btn btn-danger btn-lg width_100 margin_top_10" ng-click="forget_sub();" ng-disabled="forgetForm.$invalid">{{forgetsub}}</button>
+                </form>
+            </div>
+        </div>
+        <div class="alert alert-success"  id="ts_success" role="alert" style="margin-top: 10px; display:none;"></div>
+        <div class="alert alert-danger"  id="ts_error" role="alert" style="margin-top: 10px; display:none;"></div>
+
+        <div class="alert alert-warning" role="alert" style="margin-top: 10px;">
+          
+        </div>
+        <span style="color:#999; padding-bottom:30px;">
+            遇到无法注册或登陆,请到官网下载 <a href="http://{{websiteurl}}" target="_blank">最新版本</a>
+        </span>
+
+    </div>
+</div>
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+
+</body>
+</html>

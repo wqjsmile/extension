@@ -61,12 +61,54 @@ rocket.factory("baseService",["$rootScope","$timeout","popupService","net","noti
         $rootScope.addalert1 = "";
         $rootScope.addalert2 = "hide";
         $rootScope.addalert3 = "hide";
-        $rootScope.lineName = "";
-
+        
+        // 加载当前服务器信息，参考V2版本的goDefault逻辑
+        await loadCurrentServerInfo();
+        
         // 设置代理模式按钮状态
         updateProxyModeButtons(currentProxyMode);
 
         console.log('BaseService初始化完成');
+    }
+    
+    /**
+     * 加载当前服务器信息
+     * V3改造说明: 异步加载服务器信息，参考V2版本的goDefault逻辑
+     */
+    async function loadCurrentServerInfo() {
+        try {
+            // 优先从localStorage读取，这是V2版本的核心逻辑
+            if (localStorage.lineName && localStorage.lineName !== "请选择测试点") {
+                $rootScope.lineName = localStorage.lineName;
+                console.log('BaseService: 从localStorage恢复服务器选择:', localStorage.lineName);
+                
+                // 同步到chrome.storage
+                const currentServer = {
+                    name: localStorage.lineName,
+                    sn: localStorage.netsn || ''
+                };
+                await window.storageAdapter.set('currentServer', currentServer);
+                return;
+            }
+            
+            // 如果localStorage中没有，尝试从chrome.storage获取
+            let currentServer = await window.storageAdapter.get('currentServer');
+            
+            if (currentServer && currentServer.name) {
+                $rootScope.lineName = currentServer.name;
+                // 同步到localStorage
+                localStorage.lineName = currentServer.name;
+                if (currentServer.sn) {
+                    localStorage.netsn = currentServer.sn;
+                }
+                console.log('BaseService: 从chrome.storage恢复服务器选择:', currentServer.name);
+            } else {
+                $rootScope.lineName = "请选择测试点";
+            }
+        } catch (error) {
+            console.error('BaseService: 加载服务器信息失败:', error);
+            $rootScope.lineName = "请选择测试点";
+        }
     }
 
     function updateProxyModeButtons(mode) {
@@ -88,9 +130,47 @@ rocket.factory("baseService",["$rootScope","$timeout","popupService","net","noti
         }
     }
 
+    function addDoamin(domain) {
+        if(domain.substring(0,9) != "chrome://" && domain.substring(0,19) != "chrome-extension://" && !weatherInAutoProxyList(domain)){
+            // 加入
+            var autoProxyList = localStorage.autoProxyList.split(",");
+            autoProxyList.unshift(domain);
+            localStorage.autoProxyList = autoProxyList.join(",");
+            // TODO: 在V3中需要通过service worker设置代理模式
+            console.log('域名已添加:', domain);
+        }
+    }
+
+    function removeDomain(domain) {
+        if(domain.substring(0,9) != "chrome://" && domain.substring(0,19) != "chrome-extension://" && weatherInAutoProxyList(domain)){
+            // 移除
+            var autoProxyList = localStorage.autoProxyList.split(",");
+            var index = autoProxyList.indexOf(domain);
+            if (index > -1) {
+                autoProxyList.splice(index, 1);
+            }
+            localStorage.autoProxyList = autoProxyList.join(",");
+            console.log('域名已移除:', domain);
+        }
+    }
+
+    function changeToDefaultDomains() {
+        localStorage.autoProxyList = localStorage.autoProxyListDefault;
+        console.log('已恢复默认域名列表');
+    }
+
+    function weatherInAutoProxyList(domain) {
+        if (!localStorage.autoProxyList) return false;
+        var autoProxyList = localStorage.autoProxyList.split(",");
+        return autoProxyList.includes(domain);
+    }
+
     return {
         "init": init,
-        "updateProxyModeButtons": updateProxyModeButtons
+        "updateProxyModeButtons": updateProxyModeButtons,
+        "addDoamin": addDoamin,
+        "removeDomain": removeDomain,
+        "changeToDefaultDomains": changeToDefaultDomains
     }
 }]);
 
@@ -102,16 +182,299 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
     
     async function getServerList() {
         try {
-            const positionc = await window.storageAdapter.get('positionc');
+            // 首先确保从localStorage同步到chrome.storage
+            await window.storageAdapter.syncFromLocalStorage();
+            
+            // 获取positionc值
+            let positionc = await window.storageAdapter.get('positionc');
+            
+            // 如果chrome.storage中没有，尝试从localStorage获取
+            if (!positionc) {
+                positionc = localStorage.getItem('positionc');
+                if (positionc) {
+                    await window.storageAdapter.set('positionc', positionc);
+                }
+            }
+            
+            console.log('获取到的positionc:', positionc);
+            
+            if (!positionc) {
+                throw new Error('positionc未设置');
+            }
+            
             const url = jerry(positionc);
+            console.log('解密后的URL:', url);
+            
+            if (!url) {
+                throw new Error('URL解密失败');
+            }
             
             const response = await fetch(url);
             const data = await response.json();
+            
+            console.log('服务器列表数据:', data);
+            
+            // V3改造说明: 获取服务器列表后，自动定位到当前选中的节点
+            // 参考V2版本的changeLine逻辑
+            if (data && data.serverList && data.serverList.length > 0) {
+                await changeLineAfterGetServerList(data.serverList);
+            }
             
             return data;
         } catch (error) {
             console.error('获取服务器列表失败:', error);
             throw error;
+        }
+    }
+    
+    /**
+     * 获取服务器列表后自动定位到当前选中的节点
+     * V3改造说明: 参考V2版本的changeLine逻辑，确保选择状态正确显示
+     */
+    async function changeLineAfterGetServerList(serverList) {
+        try {
+            // 获取当前选中的服务器SN
+            let currentSn = localStorage.netsn;
+            
+            // 如果没有选中的服务器，选择第一个推荐的服务器
+            if (!currentSn) {
+                const recommendedServer = serverList.find(server => server.tuijian) || serverList[0];
+                if (recommendedServer) {
+                    currentSn = recommendedServer.sn;
+                    localStorage.netsn = currentSn;
+                    console.log('自动选择推荐服务器:', recommendedServer.name, 'SN:', currentSn);
+                }
+            } else {
+                // 检查当前选中的服务器是否还在列表中
+                const serverExists = serverList.find(server => server.sn === currentSn);
+                if (!serverExists) {
+                    // 如果不在列表中，选择第一个推荐的服务器
+                    const recommendedServer = serverList.find(server => server.tuijian) || serverList[0];
+                    if (recommendedServer) {
+                        currentSn = recommendedServer.sn;
+                        localStorage.netsn = currentSn;
+                        console.log('当前服务器不在列表中，自动选择推荐服务器:', recommendedServer.name, 'SN:', currentSn);
+                    }
+                }
+            }
+            
+            // 调用changeLine定位到选中的节点
+            if (currentSn) {
+                await changeLine(currentSn);
+            }
+        } catch (error) {
+            console.error('自动定位服务器节点失败:', error);
+        }
+    }
+    
+    /**
+     * 定位到指定的服务器节点
+     * V3改造说明: 参考V2版本的changeLine逻辑，设置当前选中的服务器
+     */
+    async function changeLine(sn) {
+        try {
+            console.log('changeLine: 定位到服务器节点, SN:', sn);
+            
+            // 从chrome.storage获取服务器列表
+            let serverList = await window.storageAdapter.get('serverList');
+            if (!serverList) {
+                // 如果chrome.storage中没有，尝试从localStorage获取
+                const svlist = localStorage.getItem('svlist');
+                if (svlist) {
+                    try {
+                        const parsed = JSON.parse(svlist);
+                        serverList = parsed.serverList || [];
+                    } catch (e) {
+                        console.error('解析localStorage中的服务器列表失败:', e);
+                        serverList = [];
+                    }
+                }
+            }
+            
+            if (serverList && serverList.length > 0) {
+                // 找到对应的服务器
+                const targetServer = serverList.find(server => server.sn === sn);
+                if (targetServer) {
+                    // 设置当前选中的服务器名称
+                    localStorage.lineName = targetServer.name;
+                    
+                    // 更新chrome.storage
+                    const currentServer = {
+                        name: targetServer.name,
+                        sn: targetServer.sn
+                    };
+                    await window.storageAdapter.set('currentServer', currentServer);
+                    
+                    console.log('changeLine: 已定位到服务器:', targetServer.name, 'SN:', targetServer.sn);
+                    
+                    // V3改造说明: 发出服务器选择变化事件，供controller监听更新UI
+                    if ($rootScope) {
+                        $rootScope.$broadcast('serverSelectionChanged', {
+                            name: targetServer.name,
+                            sn: targetServer.sn
+                        });
+                    }
+                    
+                    // 获取代理信息
+                    await getProxyInfo(sn);
+                } else {
+                    console.warn('changeLine: 未找到指定的服务器, SN:', sn);
+                }
+            } else {
+                console.warn('changeLine: 服务器列表为空');
+            }
+        } catch (error) {
+            console.error('changeLine失败:', error);
+        }
+    }
+    
+    /**
+     * 获取代理信息
+     * V3改造说明: 参考V2版本的getProxyInfo逻辑
+     */
+    async function getProxyInfo(sn) {
+        try {
+            if (!localStorage.email) {
+                console.log('getProxyInfo: 用户未登录，跳过');
+                return false;
+            }
+            
+            // 从chrome.storage获取服务器列表
+            let serverList = await window.storageAdapter.get('serverList');
+            if (!serverList) {
+                // 如果chrome.storage中没有，尝试从localStorage获取
+                const svlist = localStorage.getItem('svlist');
+                if (svlist) {
+                    try {
+                        const parsed = JSON.parse(svlist);
+                        serverList = parsed.serverList || [];
+                    } catch (e) {
+                        console.error('解析localStorage中的服务器列表失败:', e);
+                        serverList = [];
+                    }
+                }
+            }
+            
+            if (serverList && serverList.length > 0) {
+                // 找到对应的服务器并设置position
+                const targetServer = serverList.find(server => server.sn === sn);
+                if (targetServer && targetServer.position && targetServer.position !== "undefined" && targetServer.position !== "false") {
+                    localStorage.position = targetServer.position;
+                    console.log('getProxyInfo: 设置position:', targetServer.position);
+                }
+                
+                // 设置代理模式
+                const proxyMode = localStorage.ProxyMode || 'close';
+                await setProxyMode(proxyMode);
+            }
+        } catch (error) {
+            console.error('getProxyInfo失败:', error);
+        }
+    }
+    
+    /**
+     * 设置代理模式
+     * V3改造说明: 参考V2版本的setProxyMode逻辑
+     */
+    async function setProxyMode(mode) {
+        try {
+            // 检查是否需要密码
+            if (!localStorage.positionx && localStorage.needPWD === '1') {
+                console.log('setProxyMode: 需要密码，延迟1秒后重试');
+                setTimeout(() => setProxyMode(mode), 1000);
+                return false;
+            }
+            
+            mode = mode.toLowerCase();
+            
+            // 如果不是VIP，强制设置为close
+            if (localStorage.level !== "1") {
+                mode = "close";
+                console.log('setProxyMode: 非VIP用户，强制设置为close模式');
+            }
+            
+            // 更新代理模式状态
+            if (mode === 'always') {
+                // 全局代理
+                $rootScope.proxyModeSmarty = $rootScope.proxyModeClose = "btn-default";
+                $rootScope.proxyModeAlways = "btn-success";
+                $rootScope.$apply();
+                
+                // 设置图标
+                try {
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + websitenameen + "/logos/logo_green.png"
+                    });
+                } catch (error) {
+                    console.warn('设置图标失败:', error);
+                }
+                
+                await setAlways();
+            } else if (mode === "smarty") {
+                // 按需代理
+                $rootScope.proxyModeAlways = $rootScope.proxyModeClose = "btn-default";
+                $rootScope.proxyModeSmarty = "btn-success";
+                $rootScope.$apply();
+                
+                await setSmarty();
+            } else {
+                // 关闭代理
+                $rootScope.proxyModeAlways = $rootScope.proxyModeSmarty = "btn-default";
+                $rootScope.proxyModeClose = "btn-success";
+                $rootScope.$apply();
+                
+                await setClose();
+            }
+            
+            // 保存到存储
+            localStorage.ProxyMode = mode;
+            await window.storageAdapter.set('ProxyMode', mode);
+            
+            console.log('setProxyMode: 代理模式已设置为:', mode);
+        } catch (error) {
+            console.error('setProxyMode失败:', error);
+        }
+    }
+    
+    /**
+     * 设置全局代理
+     * V3改造说明: 参考V2版本的setAlways逻辑
+     */
+    async function setAlways() {
+        try {
+            console.log('setAlways: 设置全局代理');
+            // 这里可以添加全局代理的具体实现
+            // 暂时只是占位函数
+        } catch (error) {
+            console.error('setAlways失败:', error);
+        }
+    }
+    
+    /**
+     * 设置按需代理
+     * V3改造说明: 参考V2版本的setSmarty逻辑
+     */
+    async function setSmarty() {
+        try {
+            console.log('setSmarty: 设置按需代理');
+            // 这里可以添加按需代理的具体实现
+            // 暂时只是占位函数
+        } catch (error) {
+            console.error('setSmarty失败:', error);
+        }
+    }
+    
+    /**
+     * 关闭代理
+     * V3改造说明: 参考V2版本的setClose逻辑
+     */
+    async function setClose() {
+        try {
+            console.log('setClose: 关闭代理');
+            // 这里可以添加关闭代理的具体实现
+            // 暂时只是占位函数
+        } catch (error) {
+            console.error('setClose失败:', error);
         }
     }
 
@@ -142,7 +505,10 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
 
     return {
         "getServerList": getServerList,
-        "heartbeat": heartbeat
+        "heartbeat": heartbeat,
+        "changeLine": changeLine,
+        "getProxyInfo": getProxyInfo,
+        "setProxyMode": setProxyMode
     }
 }]);
 

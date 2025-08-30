@@ -66,7 +66,7 @@
             </div>
 
             <!--个人设置-->
-            <div class="container-fluid margin_bottom_10 href_options margin_bottom_15" hrefToOptions>
+            <div class="container-fluid margin_bottom_10 href_options margin_bottom_15" hreftooptions>
                 <div type="button" class="btn {{personSetClass}} btn-xs pop_title">
                     <span class="pull-left">{{personSet}}<img id="img" class="hidden" src="/images/loading.gif"></span>
                 </div>
@@ -83,10 +83,10 @@
         </div>
 
         <div class="container-fluid margin_top_10 margin_bottom_20 btn-group-vertical width_100" role="group" aria-label="btn-group-vertical">
-                <img src="images/loading.gif" id="imgld2"/>
+                <img src="images/loading.gif" id="imgld2" ng-show="loading"/>
                 <button ng-repeat="l in netlines" type="button" class="btn btn-default btn-lg pop_title width_100 chooseline {{l.tj1}}">
                     <span class="{{l.tj2}}" value="{{l.sn}}" chooselinesn>推荐</span>
-                    <span class="pull-left top-index"><label class="cursor" value="{{l.sn}}" chooselinesn><input type="radio" name="netLine" value="{{l.sn}}" />&nbsp;&nbsp;&nbsp;&nbsp;{{l.name| cut:true:15:' ...'}}</label></span>
+                    <span class="pull-left top-index"><label class="cursor" value="{{l.sn}}" chooselinesn><input type="radio" name="netLine" value="{{l.sn}}" ng-checked="l.sn == currentServerSn" />&nbsp;&nbsp;&nbsp;&nbsp;{{l.name| cut:true:15:' ...'}}</label></span>
                     <span class="btn btn-xs {{l.btnType}} pull-right cursornormal">{{l.btnTypeName}}</span>
                 </button>
         </div>

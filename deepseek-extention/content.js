@@ -560,7 +560,7 @@ const createChatWindow = () => {
 
   const iframe = document.createElement('iframe');
   iframe.id = 'chat-iframe';
-  iframe.src = 'https://chat.deepseek.com'; // 更改为 DeepSeek 官网
+  iframe.src = 'https://yuanbao.tencent.com/chat'; // 更改为 DeepSeek 官网
   iframe.style.display = 'none';
   
   console.log("聊天窗口创建成功");

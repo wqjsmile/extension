@@ -39,6 +39,12 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
             $rootScope.normal_adds_div = "";
             $rootScope.error_adds_div = "hide";
             
+            // 初始化进度条状态
+            $scope.loading = false;
+            
+            // 初始化个人设置按钮状态
+            initPersonalSettingsButton();
+            
             // 加载当前代理模式状态
             await loadProxyModeStatus();
             
@@ -49,6 +55,42 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
             
         } catch (error) {
             console.error('Popup初始化失败:', error);
+        }
+    }
+    
+    /**
+     * 初始化个人设置按钮状态
+     * V3改造说明: 参考V2版本逻辑，根据用户VIP状态设置按钮文本和样式
+     */
+    function initPersonalSettingsButton() {
+        try {
+            // 默认设置
+            $rootScope.personSet = "个人设置";
+            $rootScope.personSetClass = "btn-default";
+            
+            // 根据用户VIP等级和历史状态调整按钮文本和样式
+            const level = localStorage.level;
+            const historyVip = localStorage.history_vip;
+            
+            if (level !== '1') {
+                // 用户不是VIP
+                if (historyVip !== '0') {
+                    // 有VIP历史，显示"开通VIP"
+                    $rootScope.personSet = "开通VIP";
+                    $rootScope.personSetClass = "btn-danger";
+                } else {
+                    // 没有VIP历史，显示"申请试用"
+                    $rootScope.personSet = "申请试用";
+                    $rootScope.personSetClass = "btn-warning";
+                }
+            }
+            
+            console.log('个人设置按钮状态初始化:', $rootScope.personSet, $rootScope.personSetClass);
+        } catch (error) {
+            console.error('初始化个人设置按钮状态失败:', error);
+            // 设置默认值
+            $rootScope.personSet = "个人设置";
+            $rootScope.personSetClass = "btn-default";
         }
     }
     
@@ -67,24 +109,69 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
     
     /**
      * 加载当前服务器信息
-     * V3改造说明: 异步加载服务器信息
+     * V3改造说明: 异步加载服务器信息，参考V2版本的goDefault逻辑
      */
     async function loadCurrentServerInfo() {
         try {
-            const currentServer = await window.storageAdapter.get('currentServer');
+            // 优先从localStorage读取，这是V2版本的核心逻辑
+            if (localStorage.lineName && localStorage.lineName !== "请选择测试点") {
+                $rootScope.lineName = localStorage.lineName;
+                $scope.currentServerSn = localStorage.netsn || '';  // V3改造说明: 设置当前服务器SN供单选按钮使用
+                console.log('从localStorage恢复服务器选择:', localStorage.lineName, 'SN:', $scope.currentServerSn);
+                
+                // 同步到chrome.storage
+                const currentServer = {
+                    name: localStorage.lineName,
+                    sn: localStorage.netsn || ''
+                };
+                await window.storageAdapter.set('currentServer', currentServer);
+                return;
+            }
+            
+            // 如果localStorage中没有，尝试从chrome.storage获取
+            let currentServer = await window.storageAdapter.get('currentServer');
+            
             if (currentServer && currentServer.name) {
                 $rootScope.lineName = currentServer.name;
+                $scope.currentServerSn = currentServer.sn || '';   // V3改造说明: 设置当前服务器SN供单选按钮使用
+                // 同步到localStorage
+                localStorage.lineName = currentServer.name;
+                if (currentServer.sn) {
+                    localStorage.netsn = currentServer.sn;
+                }
+                console.log('从chrome.storage恢复服务器选择:', currentServer.name, 'SN:', $scope.currentServerSn);
             } else {
                 $rootScope.lineName = "请选择测试点";
+                $scope.currentServerSn = '';  // V3改造说明: 清空当前服务器SN
             }
         } catch (error) {
             console.error('加载服务器信息失败:', error);
             $rootScope.lineName = "请选择测试点";
+            $scope.currentServerSn = '';  // V3改造说明: 清空当前服务器SN
         }
     }
     
+    // V3改造说明: 监听服务器选择变化事件，更新单选按钮状态
+    $scope.$on('serverSelectionChanged', function(event, serverInfo) {
+        $scope.currentServerSn = serverInfo.sn;
+        console.log('Popup控制器: 收到服务器选择变化事件, 更新currentServerSn:', serverInfo.sn);
+    });
+    
     // 启动异步初始化
     initializePopup();
+    
+    // V3改造说明: 每次进入测试点列表页面时，从localStorage恢复当前选中状态
+    $scope.$watch('tab4', function(newVal, oldVal) {
+        if (newVal === '' && oldVal === 'hide') {
+            // 从隐藏状态变为显示状态，说明进入了测试点列表页面
+            // 从localStorage恢复当前选中的服务器SN
+            var currentSn = localStorage.getItem('netsn') || '';
+            if (currentSn && currentSn !== $scope.currentServerSn) {
+                $scope.currentServerSn = currentSn;
+                console.log('Popup控制器: 进入测试点列表页面，恢复当前选中状态:', currentSn);
+            }
+        }
+    });
 }]);
 
 /**
@@ -93,28 +180,177 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
  */
 
 /**
- * option控制器 - 选项页面控制器（如果需要的话）
+ * option控制器 - 选项页面控制器
+ * V3改造说明: 从原controllers.js移植option控制器的完整功能
  */
-var option = rocket.controller("option", ["$scope", "$rootScope", function($scope, $rootScope){
+var option = rocket.controller("option", ["$scope", "$rootScope", "baseService", "popupService", "$http", "config", function($scope, $rootScope, baseService, popupService, $http, config){
     console.log('Option控制器初始化 - V3版本');
     
-    // 选项页面的初始化逻辑
-    async function initializeOption() {
-        try {
-            // 加载用户设置
-            const settings = await window.storageAdapter.getMultiple([
-                'email', 'autoProxyList', 'ProxyMode', 'currentServer'
-            ]);
-            
-            $rootScope.userSettings = settings;
-            $scope.$apply();
-            
-        } catch (error) {
-            console.error('Option页面初始化失败:', error);
+    config.init();
+    // baseService初始化
+    baseService.init();
+    
+    $scope.tab1 = "";
+    $scope.tab2 = "hide";
+    $scope.tab1_span = "";
+    $scope.tab2_span = "hide";
+    $rootScope.tryout = "hide";
+    
+    // 检查登录状态
+    if(!localStorage.email){
+        window.location.href = "login.html";
+    }
+
+    $scope.emailshow = localStorage.email;
+    $scope.expireleft = "非VIP高级会员";
+    $scope.vipAlert = "show";
+
+    // 设置URL变量
+    $scope.forget_url = forget_url;
+    $scope.pay_url = pay_url;
+    $scope.instructions_url = instructions_url;
+    $scope.index_url = index_url;
+
+    // 计算会员状态和剩余天数
+    if(localStorage.expire && localStorage.level > 0){
+        var now = new Date();
+        now = Date.parse(now);
+        var left_expire = new Date(localStorage.expire);
+        left_expire = Date.parse(left_expire);
+        var expireleft = (left_expire - now) / (1000 * 3600 * 24);
+
+        if(expireleft >= 0){
+            if(expireleft <= 0.1) expireleft = 0.1;
+            $scope.expireleft = "剩余 " + expireleft.toFixed(1) + " 天";
+            $scope.vipAlert = "hide";
         }
     }
+
+    // 加载域名列表
+    var autoProxyList = localStorage.autoProxyList.split(",");
+    if(localStorage.sort == "name"){
+        autoProxyList = autoProxyList.sort();
+        $scope.paixu = "按字母顺序排序";
+    } else {
+        localStorage.sort = "time";
+        $scope.paixu = "按添加时间排序";
+    }
+    $scope.autoProxyList = autoProxyList;
+
+    // 初始化域名验证提示状态
+    $scope.addalert1 = "";      // 信息提示
+    $scope.addalert2 = "hide";  // 错误提示（域名不合法）
+    $scope.addalert3 = "hide";  // 成功提示
+
+    // 设置网站URL变量（用于邀请链接）
+    $scope.websiteurl = websiteurl;
+    $rootScope.websiteurl = websiteurl;
     
-    initializeOption();
+    // 设置分享内容
+    $scope.fenxiang = fenxiang;
+    $scope.fenxiang_encode = encodeURIComponent(fenxiang);
+    $rootScope.fenxiang = fenxiang;
+    $rootScope.fenxiang_encode = encodeURIComponent(fenxiang);
+    
+    // 修改密码功能模块 Starts
+    $scope.changesub = "确认修改";
+    $scope.change_sub = function(){
+        var add = "";
+        var i = 1;
+        $scope.changesub = "提交中";
+        var regbutton = setInterval(function(){
+            if(i<4){
+                add = add + ".";
+            } else {
+                i = 0;
+                add = "";
+            }
+            i++;
+            $scope.changesub = "提交中" + add;
+            $scope.$apply();
+        }, 500);
+
+        $scope.changeForm.$invalid = true;
+
+        // 核心更改密码开始
+        var mail = localStorage.email;
+        var password = md5($("#password").val());
+        var newpassword = md5($("#newpassword").val());
+        
+        // 更改密码交互
+        if((!mail) || (!password) || (!newpassword)){
+            $("#ts_error").show(100);
+            $("#ts_error").text("发送严重错误!");
+            setTimeout(function(){
+                $("#ts_error").hide(100);
+            }, 5000);
+            clearInterval(regbutton);
+            $scope.changeForm.$invalid = false;
+            $scope.changesub = "确认修改";
+            return false;
+        }
+        
+        var l = jerry(localStorage.positiona);
+        $http({
+            method: 'GET',
+            url: l,
+            params: {
+                'type': '4',
+                'email': mail,
+                'password': password,
+                'newpassword': newpassword
+            }
+        }).success(function(data, header, config, status){
+            // 响应成功
+            var type = data.type;
+            var msg = data.msg;
+            var token = data.token;
+            var spassword = data.password;
+            
+            if(type == "success"){
+                $("#ts_success").show(100);
+                $("#ts_success").text(msg);
+                setTimeout(function(){
+                    $("#ts_success").hide(100);
+                }, 3000);
+                
+                // 修改成功
+                $("#password").val('');
+                $("#newpassword").val('');
+                $("#newpassword2").val('');
+                localStorage.password = spassword;
+
+                clearInterval(regbutton);
+                $scope.changeForm.$invalid = false;
+                $scope.changesub = "确认修改";
+                $('#changePassword').modal('hide');
+            }
+            if(type == "error"){
+                $("#ts_error").show(100);
+                $("#ts_error").text(msg);
+                setTimeout(function(){
+                    $("#ts_error").hide(100);
+                }, 5000);
+                clearInterval(regbutton);
+                $scope.changeForm.$invalid = false;
+                $scope.changesub = "确认修改";
+            }
+        }).error(function(data, header, config, status){
+            // 处理响应失败
+            $("#ts_error").show(100);
+            $("#ts_error").text("网络不可用,请检查您的网络!");
+            setTimeout(function(){
+                $("#ts_error").hide(100);
+            }, 5000);
+            clearInterval(regbutton);
+            $scope.changeForm.$invalid = false;
+            $scope.changesub = "确认修改";
+        });
+        // 核心更改密码结束
+    };
+    // 修改密码功能模块 Ends
+    
+    console.log('Option控制器初始化完成 - 会员状态:', $scope.expireleft);
 }]);
 
 /**
@@ -132,6 +368,58 @@ var log = rocket.controller("log", ["$scope", "$rootScope", "$http", "config", f
     $scope.verify_msg = "";
     $scope.verify = false;
     $scope.verify_send = false;
+    
+    // 初始化测试点相关变量
+    $scope.tab3 = "";
+    $scope.tab4 = "hide";
+    $scope.netlines = [];
+    $scope.loading = false;
+    
+    // 加载当前选择的测试点
+    loadCurrentServerInfo();
+    
+    // 初始化个人设置按钮（V3版本）
+    initPersonalSettingsButton();
+    
+    /**
+     * 加载当前服务器信息
+     * V3改造说明: 异步加载服务器信息，参考V2版本的goDefault逻辑
+     */
+    async function loadCurrentServerInfo() {
+        try {
+            // 优先从localStorage读取，这是V2版本的核心逻辑
+            if (localStorage.lineName && localStorage.lineName !== "请选择测试点") {
+                $scope.lineName = localStorage.lineName;
+                console.log('从localStorage恢复服务器选择:', localStorage.lineName);
+                
+                // 同步到chrome.storage
+                const currentServer = {
+                    name: localStorage.lineName,
+                    sn: localStorage.netsn || ''
+                };
+                await window.storageAdapter.set('currentServer', currentServer);
+                return;
+            }
+            
+            // 如果localStorage中没有，尝试从chrome.storage获取
+            let currentServer = await window.storageAdapter.get('currentServer');
+            
+            if (currentServer && currentServer.name) {
+                $scope.lineName = currentServer.name;
+                // 同步到localStorage
+                localStorage.lineName = currentServer.name;
+                if (currentServer.sn) {
+                    localStorage.netsn = currentServer.sn;
+                }
+                console.log('从chrome.storage恢复服务器选择:', currentServer.name);
+            } else {
+                $scope.lineName = "请选择测试点";
+            }
+        } catch (error) {
+            console.error('加载服务器信息失败:', error);
+            $scope.lineName = "请选择测试点";
+        }
+    }
     
     // 处理URL hash（注册/登录切换）
     var hash = location.hash;
@@ -332,28 +620,80 @@ var log = rocket.controller("log", ["$scope", "$rootScope", "$http", "config", f
             $scope.logsub = "登录";
         });
     };
+    
+    // 加载当前选择的测试点信息
+    async function loadCurrentServerInfo() {
+        try {
+            const currentServer = await window.storageAdapter.get('currentServer');
+            if (currentServer && currentServer.name) {
+                $scope.lineName = currentServer.name;
+            } else {
+                $scope.lineName = "请选择测试点";
+            }
+        } catch (error) {
+            console.error('加载服务器信息失败:', error);
+            $scope.lineName = "请选择测试点";
+        }
+    }
+    
+    /**
+     * 初始化个人设置按钮（V3版本）
+     * 确保DOM加载完成后设置点击事件
+     */
+    function initPersonalSettingsButton() {
+        console.log('初始化个人设置按钮 - log控制器');
+        
+        // 使用$timeout确保DOM加载完成
+        setTimeout(() => {
+            const personalBtn = document.getElementById('personal-settings-btn');
+            if (personalBtn) {
+                personalBtn.onclick = function() {
+                    console.log('个人设置按钮被点击 - log控制器');
+                    
+                    // 确保用户已登录
+                    if (!localStorage.username) {
+                        alert('请先登录');
+                        return;
+                    }
+                    
+                    // 打开个人设置页面
+                    chrome.tabs.create({
+                        url: chrome.runtime.getURL('personal.html')
+                    });
+                };
+                console.log('个人设置按钮事件绑定成功 - log控制器');
+            } else {
+                console.log('个人设置按钮未找到 - log控制器');
+            }
+        }, 100);
+    }
 }]);
 
 /**
  * pay控制器 - 支付页面控制器
+ * V3改造说明: 从原controllers.js移植pay控制器的完整功能
  */
-var pay = rocket.controller("pay", ["$scope", "$rootScope", function($scope, $rootScope){
+var pay = rocket.controller("pay", ["$scope", "$rootScope", "baseService", "popupService", "config", function($scope, $rootScope, baseService, popupService, config){
     console.log('Pay控制器初始化 - V3版本');
     
-    // 支付相关的逻辑
-    $scope.paymentData = {
-        amount: '',
-        method: ''
-    };
+    // 初始化配置
+    config.init();
     
-    $scope.submitPayment = async function() {
-        try {
-            // 这里实现支付逻辑
-            console.log('支付提交:', $scope.paymentData);
-        } catch (error) {
-            console.error('支付失败:', error);
-        }
-    };
+    // baseService初始化
+    baseService.init();
+    
+    // 设置价格变量（从localStorage读取或使用默认值）
+    $scope.tc01_s = localStorage.tc01_s ? localStorage.tc01_s : '9';      // 包月显示价格
+    $scope.tc02_s = localStorage.tc02_s ? localStorage.tc02_s : '25';    // 季度显示价格  
+    $scope.tc01 = localStorage.tc01 ? localStorage.tc01 : '9.00';        // 包月实际价格
+    $scope.tc02 = localStorage.tc02 ? localStorage.tc02 : '25.00';       // 季度实际价格
+    
+    console.log('Pay控制器价格设置:', {
+        tc01_s: $scope.tc01_s,
+        tc02_s: $scope.tc02_s,
+        tc01: $scope.tc01,
+        tc02: $scope.tc02
+    });
 }]);
 
 console.log('Domecross V3 Controllers 加载完成');
