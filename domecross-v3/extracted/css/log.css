@@ -1,0 +1,73 @@
+body{
+    background-color: #F5F5F5;
+    font-family: "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+}
+
+.margin_top_20{
+    margin-top:20px;
+}
+
+
+.margin_top_15{
+    margin-top:15px;
+}
+
+.title{
+    font-size: 32px;
+    font-weight: bold;
+    color:#666666;
+    margin-left: 10px;
+}
+
+.info{
+    color:#666666;
+    letter-spacing:5px;
+}
+
+.info b{
+    color:#000;
+}
+.core{
+    width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab_core{
+    width: 190px;
+}
+.tab-content{
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+    background-color:#337ab7;
+    color:#FFF;
+}
+
+.width_100{
+    width: 100%;
+}
+.margin_top_10{
+    margin-top: 5px;
+}
+.inside_form{
+    padding:20px 25px;
+}
+
+.btn-danger.disabled, .btn-danger.disabled.active, .btn-danger.disabled.focus, .btn-danger.disabled:active, .btn-danger.disabled:focus, .btn-danger.disabled:hover, .btn-danger[disabled], .btn-danger[disabled].active, .btn-danger[disabled].focus, .btn-danger[disabled]:active, .btn-danger[disabled]:focus, .btn-danger[disabled]:hover, fieldset[disabled] .btn-danger, fieldset[disabled] .btn-danger.active, fieldset[disabled] .btn-danger.focus, fieldset[disabled] .btn-danger:active, fieldset[disabled] .btn-danger:focus, fieldset[disabled] .btn-danger:hover{
+    background-color: #d40001;
+}
+
+.tishi{
+    font-size: 11px;
+    color:#c12e2a;
+}
+.margin_top5 {
+    margin-top:5px;
+}
+.wjmm{
+    margin-top: 20px;
+    font-size: 11px;
+}

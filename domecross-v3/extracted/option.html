@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-cn"ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>{{websitename}} {{banben}} - 个人设置</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">   
+    <link href="css/option.css" rel="stylesheet">
+</head>
+
+<body ng-controller="option">
+    <div class="container height_100per">
+            <div class="row height_100per">
+                <!--左侧部分 Start-->
+                <div class="col-md-3 con-left height_100per">
+                    <!--左1部分:标题-->
+                    <div class="left_part1 container-fluid">
+                        <div class="left_tit pull-left"><b>{{websitename}}</b>  <small>{{banben}}</small></div>
+                        <div class="dropdown pull-right">
+                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                                系统菜单
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-toggle="modal" data-target="#changePassword" >修改密码</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="forget.html" target="_blank">忘记密码</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" logout>退出登录</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="container-fluid"><hr /></div>
+                    <!--左2部分:个人信息-->
+                    <div class="container-fluid">
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-md-4"><img class="logo_img" src="" width="50"/></div>
+                                        <div class="col-md-8">{{emailshow}} <br/>
+                                            <a href="pay.html"><button class="btn btn-xs btn-warning left2_time">{{expireleft}}</button></a> <div class="pull-right" refreshlevel><span class="glyphicon glyphicon-refresh refresh-level"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group-item left2_button_bg">
+                                <a href="pay.html"><button class="btn btn-lg btn-danger left2_button">续费VIP<!--span class="small" style="font-size: 12px;">（ 仅9元/月 ）</span--></button></a>
+                                <br/>
+                                <div class="text-center tryoutcc {{tryout}}" tryoutbtn style="margin-top: 10px; text-decoration: underline; color:#999; cursor:pointer;">申请试用5分钟</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!--左3部分:邀请奖励-->
+                    <!--div class="container-fluid">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-warning" id="tab1_a" tab1>
+                               <div class="left3_active" id="tab1_div" ><span class="glyphicon glyphicon-chevron-right {{tab1_span}}"></span> 加速上网列表<img id="img" class="hidden" src="/images/loading.gif"></div>
+                            </a>
+                            <a href="#" class="list-group-item" id="tab2_a" tab2>
+                               <div id="tab2_div" > <span class="glyphicon glyphicon-chevron-right {{tab2_span}}"></span> 邀请双方奖励 <span class="glyphicon glyphicon-gift shake"></span></div>
+                            </a>
+                        </div>
+                    </div-->
+
+                    <!--左4部分:使用帮助-->
+                    <div class="container-fluid">
+                        <div class="list-group">
+                            <a href="{{index_url}}" target="_blank" class="list-group-item">官网首页</a>
+                            <a href="{{instructions_url}}" target="_blank" class="list-group-item">无法使用？</a>
+                            <a href="pay.html" target="_blank" class="list-group-item">快捷续费通道</a>
+                            <a href="{{index_url}}#email" target="_blank" class="list-group-item">联系我们</a>
+                        </div>
+                    </div>
+
+                </div>
+                <!--左侧部分 End-->
+
+                <!--右侧部分 Start-->
+                <div class="col-md-9 con-right height_100per" style="overflow-y:scroll">
+                    <div class="{{tab1}}">
+
+                            <!--右1部分:标题-->
+                            <div class="container-fluid right_part1">
+                                <div class="alert alert-success"  id="ts_success" role="alert" style="margin-top: 10px; display:none;"></div>
+                                <div class="alert alert-danger {{vipAlert}} shake" role="alert">您的VIP会员未开通或已过期,无法正常使用本产品. 请 <a href="pay.html" target="_blank"><button class="btn btn-warning btn-xs">续费</button></a> <button class="btn btn-danger btn-xs tryoutcc {{tryout}}" tryoutbtn>申请试用5分钟</button></div>
+                                <div class="row">
+                                    <div class="col-md-8"><h4>多点测试的网站域名</h4></div>
+                                    <div class="col-md-4">
+                                        <!--div class="dropdown pull-right fs10">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{paixu}} <span class="caret"></span></a>
+                                            <ul class="dropdown-menu">
+                                                <li><a href="javascript:void(0)" sortbytime>添加时间排序</a></li>
+                                                <li><a href="javascript:void(0)" sortByName>字母顺序排序</a></li>
+                                            </ul>
+                                         </div-->
+                                    </div>
+                                </div>
+                                <!--div class="row">
+                                    <div class="container-fluid"><hr /></div>
+                                    <div class="col-md-12" style="line-height: 35px; margin-top:0px;">
+                                        <b>邀请双方奖励: <span class="glyphicon glyphicon-gift"></span></b>
+
+
+                                        <a class="btn  btn-success" style="margin-left: 10px;" target="_blank" href="http://service.weibo.com/share/share.php?title={{fenxiang_encode}}">分享到新浪微博</a>
+                                        <a class="btn  btn-success" style="margin-left: 10px;" target="_blank" href="http://shuo.douban.com/!service/share?href=http://{{websiteurl}}/?r%3D{{emailshow}}&name={{fenxiang_encode}}">分享到豆瓣</a>
+                                        <a class="btn  btn-success" style="margin-left: 10px;" target="_blank" href="http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=http://{{websiteurl}}/?r%3D{{emailshow}}&title={{fenxiang_encode}}">分享到QQ空间</a>
+                                        <a class="btn  btn-success" style="margin-left: 10px;" target="_blank" href="http://share.v.t.qq.com/index.php?c=share&amp;a=index&amp;url=http://{{websiteurl}}/?r%3D{{emailshow}}&amp;title={{fenxiang_encode}}">分享到腾讯微博</a>
+                                        <a class="btn  btn-success" style="margin-left: 10px;" target="_blank" href="http://widget.renren.com/dialog/share?url=http://{{websiteurl}}/?r%3D{{emailshow}}&amp;title={{fenxiang_encode}}&amp;pic=http://{{websiteurl}}/index/views/default/ued/images/domecross/logos/logo.png&amp;description=无需设置，简单易用，不限流量、不限速度，可进行全局代理、自动代理等多重模式，支持Facebook、Youtube、Twitter、Google、Gmail等网站的访问">分享到人人网</a>
+                                    </div>
+                                </div-->
+
+                            </div>
+
+                            <div class="container-fluid"><hr /></div>
+
+
+                            <div class="container-fluid">
+                                <div class="alert alert-info text-center {{addalert1}}" role="alert">将需要多点测试访问的网站域名添加到这里, 对以下域名按需开启网站进行多点测试（包括子域名）</div>
+                                <div class="alert alert-danger text-center {{addalert2}}" role="alert"><b>您输入的域名不合法!</b>  您也可以输入任意URL地址,系统将自动提取域名. 例如: http://{{websiteurl}}/index.html</div>
+                                <div class="alert alert-success text-center {{addalert3}}" role="alert"><b>操作成功!</b></div>
+                            </div>
+
+                            <!--右2部分:添加表单-->
+                            <div class="container-fluid right_part2">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="domainAdd" placeholder="请输入域名，按回车添加">
+
+                                            <div class="input-group-btn">
+                                                <input type="submit" value="添加域名" class="btn btn-success" webmanageradd>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 margin-20">
+                                        <input type="submit" value="一键恢复初始值" class="btn btn-warning modaldefault" data-toggle="modal" data-target="#confirmDefault">
+                                    </div>
+                                </div>
+                            </div>
+                            <!--div class="container-fluid right_part2_2">
+                                <span>在访问下面的域名时，{{websitename}}会按需开启多点测试访问模式，自动进行多点访问测试</span>
+                            </div-->
+
+                            <!--右3部分:网站展示-->
+                            <!--div class="container-fluid right3">
+                                <div class="row">
+                                    <div ng-repeat="l in autoProxyList" class="col-md-4" webmanager><div class="web-name">{{l | cut:true:23:' ...'}} <span class="pull-right glyphicon glyphicon-trash trash" style="display: none;" webname="{{l}}" webmanagertrash></span></div></div>
+                                </div>
+                            </div-->
+
+                        </div>
+                        <!--右侧部分 End-->
+
+                        <div class="{{tab2}}">
+                            <div class="container-fluid right_part1">
+                                 <div class="row">
+                                    <div class="col-md-12"><h4>邀请奖励</h4></div>
+                                </div>
+                                <div class="container-fluid"><hr /></div>
+                                <div class="row">
+                                    <div class="col-md-12" style="font-size: 16px;"><b>专属邀请链接 ：  </b>
+                                        <a href="http://{{websiteurl}}/?r={{emailshow}}" TARGET="_blank">http://{{websiteurl}}/?r={{emailshow}}</a>
+                                        <input type="text" id="tuijian" class="tuijianinput" value="http://{{websiteurl}}/?r={{emailshow}}"/>
+                                        <button class="btn btn-xs btn-danger" style="margin-left: 10px;" tuijianfuzhi>复制</button></div>
+                                </div>
+                                <div class="container-fluid"><hr /></div>
+                                <div class="row">
+                                    <div class="col-md-12" style="line-height: 35px;"><span class="btn btn-warning btn-xs">首冲VIP奖励</span>  发送上面的链接给您的好友,好友通过链接安装后,首次充值VIP,双方都能获得<span class="alert-warning">【10天VIP奖励】</span> 成功获得奖励后,VIP时间会自动延长,系统会发送邮件提醒您.</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="container-fluid"><hr /></div>
+                                    <div class="col-md-12" style="line-height: 35px; margin-top:20px;">
+                                        <b style="font-size: 16px;">分享到社交网络：  </b><br/>
+                                        <textarea id="shareContent" rows="2" style=" width:100%;border: 1px solid #cccccc;padding:10px; color:#666;">{{fenxiang}}</textarea>
+                                        <br/>
+                                        <b>一键分享获得奖励:</b>
+
+
+                                        <a class="btn  btn-danger" style="margin-left: 10px;" target="_blank" href="http://service.weibo.com/share/share.php?title={{fenxiang_encode}}">分享到新浪微博</a>
+                                        <a class="btn  btn-danger" style="margin-left: 10px;" target="_blank" href="http://shuo.douban.com/!service/share?href=http://{{websiteurl}}/?r%3D{{emailshow}}&name={{fenxiang_encode}}">分享到豆瓣</a>
+                                        <a class="btn  btn-danger" style="margin-left: 10px;" target="_blank" href="http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=http://{{websiteurl}}/?r%3D{{emailshow}}&title={{fenxiang_encode}}">分享到QQ空间</a>
+                                        <a class="btn  btn-danger" style="margin-left: 10px;" target="_blank" href="http://share.v.t.qq.com/index.php?c=share&amp;a=index&amp;url=http://{{websiteurl}}/?r%3D{{emailshow}}&amp;title={{fenxiang_encode}}">分享到腾讯微博</a>
+                                        <a class="btn  btn-danger" style="margin-left: 10px;" target="_blank" href="http://widget.renren.com/dialog/share?url=http://{{websiteurl}}/?r%3D{{emailshow}}&amp;title={{fenxiang_encode}}&amp;pic=http://{{websiteurl}}/index/views/default/ued/images/domecross/logos/logo.png&amp;description=无需设置，简单易用，不限流量、不限速度，可进行全局代理、自动代理等多重模式，支持Facebook、Youtube、Twitter、Google、Gmail等网站的访问">分享到人人网</a>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                </div>
+            </div>
+    </div>
+
+
+    <!--修改密码-->
+    <div class="modal fade " id="changePassword" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">修改密码</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger"  id="ts_error" role="alert" style="margin-top: 10px; display:none;"></div>
+                    <form name="changeForm"  novalidate>
+                        <div class="form-group">
+                            <label class="control-label">旧密码:</label>
+                            <span ng-show="changeForm.password.$dirty && changeForm.password.$invalid" class="pull-right tishi">
+                                密码最小6位,最大20位
+                                <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                            </span>
+                            <input type="password" id="password" minlength="6" maxlength="20" ng-model="password" name="password" class="form-control" placeholder="请输入密码" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">新密码:</label>
+                            <span ng-show="changeForm.newpassword.$dirty && changeForm.newpassword.$invalid" class="pull-right tishi">
+                                密码最小6位,最大20位
+                                <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                            </span>
+                            <input type="password" id="newpassword" minlength="6" maxlength="20" ng-model="newpassword" name="newpassword" class="form-control" placeholder="请输入您的新密码" required>
+
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">新密码确认:</label>
+                            <span ng-show="changeForm.newpassword2.$dirty && changeForm.newpassword2.$invalid" class="pull-right tishi">
+                                两次密码输入不一致
+                                <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                            </span>
+                            <input type="password" id="newpassword2" minlength="6" maxlength="20" ng-model="newpassword2" name="newpassword2" class="form-control" placeholder="请再次输入您的新密码" pw-check="newpassword" required>
+
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" ng-click="change_sub();" ng-disabled="changeForm.$invalid">{{changesub}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--确认恢复系统默认-->
+    <div class="modal fade " id="confirmDefault" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">操作确认</h4>
+                </div>
+                <div class="modal-body">
+                    您确认恢复为默认值吗?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" webmanagerdefault>确认修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade " id="fenxiangDefault" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">领取试用</h4>
+                </div>
+                <div class="modal-body" style="padding-top: 30px; padding-bottom: 30px; line-height: 30px;">
+                    分享至"<b style="color:red;">新浪微博</b>"成功后,立刻领取<b style="color:red;">5分钟VIP</b>资格.凡是通过您的分享注册并充值后,您和您的朋友双方各送<b style="color:red;">10天VIP</b>权限,还有机会获得神秘大奖.是否前往分享?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <a href="http://service.weibo.com/share/share.php?title={{fenxiang_encode}}" target="_blank"><button type="button" class="btn btn-primary" tryoutbtn>前往分享</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+
+</body>
+</html>

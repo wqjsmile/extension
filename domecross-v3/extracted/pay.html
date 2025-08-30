@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-cn" ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>DomeCross-开通/续费VIP服务</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/pay.css" rel="stylesheet">
+</head>
+
+<body ng-controller="pay">
+<div class="container-fluid" style="height: 90px; background-color: #000;">
+    <div class="container">
+    <div class="row">
+        <div class="col-md-12" style="height: 90px; line-height: 80px;"><img class="logo_img" src="images/domecross/logos/logo.png" width="50">  <span style="font-size: 28px; font-weight: bold; color: white; margin-left: 10px;">Domecross</span></div>
+    </div>
+    </div>
+</div>
+
+            <!--第2部分 教程 start -->
+            <div class="container">
+                <div class="choose_title">选择服务套餐</div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <hr class="index_middle_hr"/>
+                        <div class="left_des">DomeCross是一个Chrome瀏覽器的多点测试插件，可帮您大幅提升您的开发工作效率。</div>
+                        <hr class="index_middle_hr"/>
+                    </div>
+                    <div class="col-md-4 col_2">
+                        <div class="blk blk_1">
+                            <h3>包月套餐</h3>
+                            <div>服务续费时间: 30天</div>
+                            <div class="yuanjia">原价: <s>20元</s></div>
+                            <hr class="index_middle_hr_2"/>
+                            <div class="price">{{tc01_s}}元 <small>/月</small></div>
+                            <hr class="index_middle_hr_2"/>
+                            <button class="btn btn-lg btn-danger by" days="30" price="{{tc01}}" paytype="1" >立即开通</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col_2">
+                        <div class="blk blk_2">
+                            <h3>季度套餐</h3>
+                            <div>服务续费时间: 90天</div>
+                            <div class="yuanjia">原价: <s>60元</s></div>
+                            <hr class="index_middle_hr_2"/>
+                            <div class="price">{{tc02_s}}元 <small>/季</small></div>
+                            <hr class="index_middle_hr_2"/>
+                            <button class="btn btn-lg btn-danger by"  days="90" price="{{tc02}}" paytype="2">立即开通</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--第2部分 教程 end -->
+            <!--第3部分 教程 start -->
+            <div class="container">
+                <table class="table table-striped quanxian">
+                    <tr><td class="left30" width="25%"></td><td class="text-center bytitle">包月套餐</td><td class="text-center bjtitle">季度套餐</td></tr>
+                    <tr><td class="left30">同时使用人数上限</td><td class="text-center">2人同时</span></td><td class="text-center">2人同时</td></tr>
+                    <tr><td class="left30">自动过滤，智能检测</td><td class="text-center bytitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td><td class="text-center bjtitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td></tr>
+                    <tr><td class="left30">可灵活配置<span class="ft03"></span></td><td class="text-center bytitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td><td class="text-center bjtitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td></tr>
+                    <tr><td class="left30">付费后自动开通或自动续费</td><td class="text-center bytitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td><td class="text-center bjtitle_rt"><span class="glyphicon glyphicon-ok-circle"></span></td></tr>
+                </table>
+            </div>
+            <!--第3部分 教程 end -->
+
+            <!--订单确认-->
+            <div class="modal fade" id="confirmDefault" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form action="" method="post" id="form_pay" >
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" id="exampleModalLabel">请核对订单信息</h4>
+                            </div>
+                            <div class="modal-body" style="line-height:38px;">
+                                    <input type="text" name="email" value="" id="scp_email1" style="display:none;"/>
+                                    <input type="text" name="pay_type" value ="" id="scp_pay_type" style="display:none;"/>
+                                    <div class="row"><div class="col-md-4 text-right"><b>邮箱：</b></div><div class="col-md-8" id="scp_email2"> &nbsp; </div></div>
+                                    <div class="row"><div class="col-md-4 text-right"><b>当前用户身份：</b></div><div class="col-md-8" id="scp_vip"> &nbsp; </div></div>
+                                    <div class="row"><div class="col-md-4 text-right"><b>当前VIP服务时间：</b></div><div class="col-md-8" id="scp_expire"> &nbsp; </div></div>
+                                    <div class="row"><div class="col-md-4 text-right"><b>服务续费时间：</b></div><div class="col-md-8" id="scp_time"> &nbsp; </div></div>
+                                    <div class="row"><div class="col-md-4 text-right"><b>续费后VIP服务时间：</b></div><div class="col-md-8" id="scp_expire_after" > &nbsp; </div></div>
+                                    <div class="row"><div class="col-md-4 text-right"><b>应付总额：</b></div><div class="col-md-8" id="scp_price">  元</div></div>
+                                    <div class="row"><div class="col-md-4 text-right ml"><b>支付方式：</b></div><div class="col-md-8 mr">
+                                        <label><input class="alipay paymethod" value="1" name="paymethod" type="radio" checked/><img src="images/alipay.png" height="30"/></label>
+                                        <br>
+                                        <!-- class weixinpay -->
+                                        <label><input class="weixinpay paymethod" value="2" name="paymethod" type="radio" /><img src="images/WePayLogo.png" height="30"/></label>
+                                    </div></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" id="pay_submit_button" class="btn btn-danger btn-lg">提交订单</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+<script src="lib/pay/pay.js"></script>
+<div class="container-fluid" style="height: 60px; background-color: #4395E7;">
+    <div class="container">
+    <div class="row">
+        <div class="col-md-12" style="height: 60px; line-height: 60px;"><span style="margin-left: 30px; color:#fff;">©DomeCross. All rights reserved </span></div>
+    </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-cn" ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>DomeCross-开通/续费VIP服务</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/pay.css" rel="stylesheet">
+</head>
+
+<body ng-controller="pay">
+<div class="container-fluid" style="height: 90px; background-color: #000;">
+    <div class="container">
+    <div class="row">
+        <div class="col-md-12" style="height: 90px; line-height: 80px;"><img class="logo_img" src="images/domecross/logos/logo.png" width="50">  <span style="font-size: 28px; font-weight: bold; color: white; margin-left: 10px;">DomeCross</span></div>
+    </div>
+    </div>
+</div>
+
+            <!--第2部分 教程 start -->
+
+<div class="container-fluid text-center" id="waiting" style="padding-top:30px; padding-bottom:30px; font-size:16px;"> 微信订单二维码生成中，如已生成请直接“微信扫一扫”，如未生成请耐心等待... </div>
+
+<iframe id="wxpay_iframe" src=""  frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="width:100%; height:808px;"></iframe>
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+<script src="lib/pay/wxpay.js"></script>
+<div class="container-fluid" style="height: 60px; background-color: #4395E7;">
+    <div class="container">
+    <div class="row">
+        <div class="col-md-12" style="height: 60px; line-height: 60px;"><span style="margin-left: 30px; color:#fff;">©DomeCross. All rights reserved </span></div>
+    </div>
+    </div>
+</div>
+</body>
+</html>

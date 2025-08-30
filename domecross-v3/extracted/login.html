@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-cn"ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>{{websitename}} {{banben}} - 註冊登錄</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">   
+    <link href="css/log.css" rel="stylesheet">
+</head>
+
+<body ng-controller="log">
+<div class="container text-center margin_top_20">
+    <img class="logo_img" src="" /><span class="title">{{websitename}}</span>
+</div>
+<div class="container text-center margin_top_15">
+    <span class="info">快速提升您的開發測試效率</span>
+</div>
+
+<div class="container margin_top_20">
+
+    <div class="core">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active tab_core_active tab_core text-center"><a href="#reg" id="register_tab"  aria-controls="reg" role="tab" data-toggle="tab">会员注册</a></li>
+            <li role="presentation" class="tab_core text-center"><a href="#log" aria-controls="log" id="login_tab" role="tab" data-toggle="tab">会员登录</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active " id="reg">
+                <!--注册-->
+                <form name="regForm"  class="inside_form" novalidate>
+                    <div class="form-group" ng-class="{'has-success' : !regForm.myEmail.$pristine && regForm.myEmail.$valid, 'has-error' : !regForm.myEmail.$pristine && regForm.myEmail.$invalid }">
+                        <label for="exampleInputEmail1">邮箱</label>
+                        <span ng-show="regForm.myEmail.$dirty && regForm.myEmail.$invalid" class="pull-right tishi">
+                            邮箱格式不符合规范
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="text" id="reg_email" name="myEmail" ng-model="myEmail" maxlength="35"  class="form-control input-lg" ng-pattern="/^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9\-]+@([a-zA-Z0-9\-]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="form-group" ng-class="{'has-success' : !regForm.password.$pristine && regForm.password.$valid, 'has-error' : !regForm.password.$pristine && regForm.password.$invalid }">
+                        <label for="exampleInputPass">密码</label>
+                        <span ng-show="regForm.password.$dirty && regForm.password.$invalid" class="pull-right tishi">
+                            密码最小6位,最大20位
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="password" id="reg_password" minlength="6" maxlength="20" ng-model="password" name="password" class="form-control input-lg" placeholder="请输入密码" required>
+                    </div>
+                    <div class="form-group" ng-class="{'has-success' : !regForm.passwordagain.$pristine && regForm.passwordagain.$valid, 'has-error' : !regForm.passwordagain.$pristine && regForm.passwordagain.$invalid }">
+                        <label for="exampleInputPassAgain">验证码</label>
+                        <span ng-show="(regForm.passwordagain.$dirty && regForm.passwordagain.$invalid) || verify" class="pull-right tishi">
+                            {{verify_msg}}
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" id="reg_verify"  minlength="4" maxlength="4" ng-pattern="/^[0-9a-zA-Z]*$/" ng-model="passwordagain" name="passwordagain" class="form-control input-lg" placeholder="请输入验证码"  veritycode required/>
+                            </div>
+                            <div  class="col-md-6">
+                                <button type="button" class="btn btn-primary margin_top5" ng-disabled="verify_send" verify>发送验证码至邮箱</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="regsub" class="btn btn-danger btn-lg width_100 margin_top_10" ng-click="reg_sub();" ng-disabled="regForm.$invalid">{{regsub}}</button>
+                </form>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="log">
+                <!--登录-->
+                <form name="logForm"  class="inside_form" novalidate>
+                    <div class="form-group" ng-class="{'has-success' : !logForm.myEmail.$pristine && logForm.myEmail.$valid, 'has-error' : !logForm.myEmail.$pristine && logForm.myEmail.$invalid }">
+                        <label for="exampleInputEmail1">邮箱</label>
+                        <span ng-show="logForm.myEmail.$dirty && logForm.myEmail.$invalid" class="pull-right tishi">
+                            邮箱格式不符合规范
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="text" id="log_email" name="myEmail" ng-model="myEmail" maxlength="35"  class="form-control input-lg" ng-pattern="/^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9\-]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="form-group" ng-class="{'has-success' : !logForm.password.$pristine && logForm.password.$valid, 'has-error' : !logForm.password.$pristine && logForm.password.$invalid }">
+                        <label for="exampleInputPass">密码</label>
+                        <span ng-show="logForm.password.$dirty && logForm.password.$invalid" class="pull-right tishi">
+                            密码最小6位,最大20位
+                            <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+                        </span>
+                        <input type="password" id="log_password" minlength="6" maxlength="20" ng-model="password" name="password"  class="form-control input-lg" placeholder="请输入密码" required>
+                    </div>
+                    <button type="submit" id="logsub" class="btn btn-danger btn-lg width_100 margin_top_10" ng-click="log_sub();" ng-disabled="logForm.$invalid">{{logsub}}</button>
+                    <div class="wjmm"><a href="forget.html" target="_blank">忘记密码</a></div>
+                </form>
+            </div>
+        </div>
+        <div class="alert alert-success"  id="ts_success" role="alert" style="margin-top: 10px; display:none;"></div>
+        <div class="alert alert-danger"  id="ts_error" role="alert" style="margin-top: 10px; display:none;"></div>
+
+        <div class="alert alert-warning" role="alert" style="margin-top: 10px;">
+            使用須知：<br/>
+            1、僅供專業開發測試人員，模擬多地測試您開發網站的訪問效果，請勿作為其他用途;<br/>
+            2、使用時請嚴格遵守當地國家和地區的法律,通過訪問會有詳細的系統日誌.<br/>
+        </div>
+
+    </div>
+</div>
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+
+</body>
+</html>

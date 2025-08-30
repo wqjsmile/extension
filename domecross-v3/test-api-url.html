@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>API URL 测试</title>
+    <script src="lib/jquery/jquery-1.12.2.min.js"></script>
+    <script src="js/v3-adapter.js"></script>
+    <script src="lib/md5.js"></script>
+</head>
+<body>
+    <h1>API URL 解密测试</h1>
+    
+    <div id="results">
+        <h2>测试结果:</h2>
+        <div id="positiona-result"></div>
+        <div id="jerry-test"></div>
+        <div id="api-test"></div>
+    </div>
+    
+    <script>
+        console.log('开始测试API URL解密...');
+        
+        // 测试positiona值
+        const positiona = localStorage.getItem('positiona') || "7|19|19|15|18|57|56|95|56|95|11|14|6|94|11|20|1|14|19|21|94|2|14|12|";
+        document.getElementById('positiona-result').innerHTML = `
+            <h3>positiona 值:</h3>
+            <p>原始值: ${positiona}</p>
+            <p>localStorage中的值: ${localStorage.getItem('positiona') || '未设置'}</p>
+        `;
+        
+        // 测试jerry函数
+        if (typeof jerry === 'function') {
+            const decrypted = jerry(positiona);
+            document.getElementById('jerry-test').innerHTML = `
+                <h3>jerry函数测试:</h3>
+                <p>解密结果: ${decrypted}</p>
+                <p>解密成功: ${decrypted ? '是' : '否'}</p>
+            `;
+            
+            // 测试API调用
+            if (decrypted) {
+                const testEmail = 'test@example.com';
+                const testPassword = md5('testpassword');
+                
+                document.getElementById('api-test').innerHTML = `
+                    <h3>API调用测试:</h3>
+                    <p>完整URL: ${decrypted}?type=3&email=${testEmail}&password=${testPassword}</p>
+                    <p>URL长度: ${decrypted.length}</p>
+                    <p>是否以http开头: ${decrypted.startsWith('http') ? '是' : '否'}</p>
+                `;
+                
+                console.log('解密后的API URL:', decrypted);
+                console.log('测试API调用:', `${decrypted}?type=3&email=${testEmail}&password=${testPassword}`);
+            }
+        } else {
+            document.getElementById('jerry-test').innerHTML = `
+                <h3>jerry函数测试:</h3>
+                <p style="color: red;">jerry函数未定义!</p>
+            `;
+        }
+        
+        // 手动解密验证
+        console.log('手动解密验证:');
+        const parts = positiona.split("|");
+        let manualResult = "";
+        for (let i = 0; i < parts.length; i++) {
+            const num = parseInt(parts[i]);
+            if (!isNaN(num) && num > 0) {
+                const char = String.fromCharCode(num + 65);
+                manualResult += char;
+                console.log(`${num} + 65 = ${num + 65} → '${char}'`);
+            }
+        }
+        console.log('手动解密结果:', manualResult);
+        
+        // 检查localStorage中的所有相关值
+        console.log('localStorage检查:');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.includes('position') || key.includes('cfg_')) {
+                console.log(`${key}: ${localStorage.getItem(key)}`);
+            }
+        }
+    </script>
+</body>
+</html>

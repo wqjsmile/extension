@@ -1,0 +1,144 @@
+body{
+    font-family: "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+}
+.choose_title{
+    color: #666;
+    font-size: 45px;
+    margin-top:60px;
+}
+.left_des{
+    font-size: 16px;
+    color:#999999;
+    margin-top: 50px;
+    margin-bottom: 70px;
+}
+.col_2{
+    color:#FFF;
+    margin-top: 20px;
+}
+
+.blk{
+
+    margin-left: -17px;
+    padding: 1px 20px 20px 20px;
+
+}
+
+.blk_1{
+    background-color: #5B6A67;
+}
+.blk_2{
+    background-color: #4BA7AF;
+}
+.blk_3{
+    background-color: #4BBD37;
+}
+
+.yuanjia{
+    margin-top: 30px;
+}
+.index_middle_hr_2{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.price{
+    font-size: 25px;
+    color:#FFFB00;
+}
+.price small{
+    font-size: 12px;
+}
+.blk button{
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.quanxian{
+    margin-top: 70px;
+    margin-bottom: 100px;
+    border: none;
+}
+.table>tbody>tr>td{
+    border: none;
+    height: 60px;
+    vertical-align: middle;
+    color:#949494;
+    font-size: 16px;
+    font-weight: 200px;
+    color:#949494;
+}
+
+.table>tbody>tr>td.left30{
+    padding-left: 30px;
+}
+
+.table>tbody>tr>td.bytitle{
+    font-size:20px;
+    font-weight:200;
+    color:#576966;
+}
+
+.table>tbody>tr>td.bjtitle{
+    font-size:20px;
+    font-weight:200;
+    color:#42A7AE;
+}
+.table>tbody>tr>td.bntitle{
+    font-size:20px;
+    font-weight:200;
+    color:#40BC4F;
+}
+.table>tbody>tr>td.bytitle_rt{
+    font-size:25px;
+    font-weight:100;
+    color:#576966;
+}
+.table>tbody>tr>td.bjtitle_rt{
+    font-size:25px;
+    font-weight:100;
+    color:#42A7AE;
+}
+
+.table>tbody>tr>td.bntitle_rt{
+    font-size:25px;
+    font-weight:100;
+    color:#40BC4F;
+}
+
+#confirmDefault .modal-footer{
+    text-align:center;
+}
+#confirmDefault .btn-lg{
+    width:40%;
+    height:45px;
+    margin-top:5px;
+    margin-bottom:10px;
+}
+#confirmDefault .row{
+    font-size:14px;
+    color:#666;
+}
+#confirmDefault .alipay{
+    margin-right:10px;
+}
+#confirmDefault .ml{
+    margin-top:2px;
+}
+#confirmDefault .mr{
+    margin-top:5px;
+}
+#confirmDefault .alipay{
+    margin-right:10px;
+}
+
+#confirmDefault .weixinpay{
+    margin-right:10px;
+    margin-top: 20px;
+}
+
+
+.dl_chrome{
+    color:#333;
+    text-decoration:underline;
+    font-size:12px;
+}

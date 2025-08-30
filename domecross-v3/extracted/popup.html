@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-cn" ng-app="rocket">
+<head>
+    <meta charset="utf-8">
+    <title>Popup</title>
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">   
+    <link href="css/popup.css" rel="stylesheet">
+
+</head>
+
+<body ng-controller="popup">
+    <div class="{{tab3}}">
+            <!--新站点代理添加-->
+            <div class="{{normal_adds_div}}">
+                <div class="container-fluid text-center pop_title width_100 margin_top_10" id="currentTabUrl">{{currentTabUrl}} </div>
+                <div class="container-fluid margin_top_10">
+                    <span type="button" class="btn btn-success pop_title width_100 {{add_this}}" addCurDomain>
+                        <span class="pull-left">将当前网站加入多点测试</span>
+                        <span class="glyphicon glyphicon-plus-sign pull-right"></span>
+                    </span>
+
+                    <span role="group" class="btn-group pop_title width_100 {{remove_this}}" removeCurDomain>
+                        <span  type="button" class=" btn btn-default pop_title" disabled>当前网站已在测试列表</span>
+                        <span  type="button" class="btn btn-default glyphicon glyphicon-trash trash" data-toggle="tooltip" data-placement="left" title="从多点测试中移除该域名"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="{{error_adds_div}}">
+                <div class="container-fluid text-center pop_title width_100 text-danger margin_top_10 margin_bottom_15">检测当前网页中有无法访问资源: </div>
+
+                <div ng-repeat="l in error_tab" class="container-fluid text-center pop_title width_100 text-danger"> <input name="error_adds" class="error_adds" value="{{l}}" type="checkbox" checked/> {{l}} </div>
+                <div class="container-fluid margin_top_10">
+                        <span type="button" class="btn btn-danger pop_title width_100" adderrorDomain>
+                            <span class="pull-left">一键将网站加入多点测试</span>
+                            <span class="glyphicon glyphicon-plus-sign pull-right"></span>
+                        </span>
+                </div>
+            </div>
+
+        <!--代理模式选择-->
+            <div class="container-fluid text-center pop_title width_100 margin_top_10">多点测试模式</div>
+
+
+            <div class="container-fluid text-center pop_title width_100 margin_top_10 relative">
+
+                <div class=" container-fluid alert-div width_100 {{alertDivDisplay}}">
+                    <div class="alert-popup alert-black text-left" role="alert">
+                        {{alertMessage}}
+                    </div>
+                </div>
+
+                <div class="btn-group btn-group-justified" role="group">
+                    <span class="btn {{proxyModeAlways}} pop_title" role="button" modeAlways style="z-index: 9999">一直</span>
+                    <span class="btn {{proxyModeSmarty}} pop_title" role="button" modeSmarty style="z-index: 9999">按需</span>
+                    <span class="btn {{proxyModeClose}} pop_title" role="button"  modeClose  style="z-index: 9999">关闭</span>
+                </div>
+            </div>
+
+            <!--节点选择-->
+            <div class="container-fluid text-center pop_title width_100 margin_top_10">当前多点测试节点</div>
+            <div class="container-fluid margin_top_10" netline>
+                <div type="button" class="btn btn-default btn-backgrown pop_title width_100">
+                    <span class="pull-left"><b>{{lineName}}&nbsp;</b></span>
+                    <span class="pull-right" style="color:#d9534f;"><b>切换测试点</b></span>
+                </div>
+            </div>
+
+            <!--个人设置-->
+            <div class="container-fluid margin_bottom_10 href_options margin_bottom_15" hrefToOptions>
+                <div type="button" class="btn {{personSetClass}} btn-xs pop_title">
+                    <span class="pull-left">{{personSet}}<img id="img" class="hidden" src="/images/loading.gif"></span>
+                </div>
+                <span class="glyphicon glyphicon-menu-right pull-right pop_title cursor"></span>
+            </div>
+    </div>
+
+    <div class="{{tab4}}">
+        <div class="container-fluid margin_top_10">
+            <button type="button" class="btn btn-default btn-backgrown pop_title width_100" netlineback>
+                <span class=""><b>测试点列表</b></span>
+                <span class="glyphicon glyphicon-circle-arrow-left pull-left"></span>
+            </button>
+        </div>
+
+        <div class="container-fluid margin_top_10 margin_bottom_20 btn-group-vertical width_100" role="group" aria-label="btn-group-vertical">
+                <img src="images/loading.gif" id="imgld2"/>
+                <button ng-repeat="l in netlines" type="button" class="btn btn-default btn-lg pop_title width_100 chooseline {{l.tj1}}">
+                    <span class="{{l.tj2}}" value="{{l.sn}}" chooselinesn>推荐</span>
+                    <span class="pull-left top-index"><label class="cursor" value="{{l.sn}}" chooselinesn><input type="radio" name="netLine" value="{{l.sn}}" />&nbsp;&nbsp;&nbsp;&nbsp;{{l.name| cut:true:15:' ...'}}</label></span>
+                    <span class="btn btn-xs {{l.btnType}} pull-right cursornormal">{{l.btnTypeName}}</span>
+                </button>
+        </div>
+    </div>
+
+
+<script src="lib/jquery/jquery-1.12.2.min.js"></script>
+<script src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script src="lib/tldjs.js"></script>
+<script src="lib/md5.js"></script>
+<!-- build:js js/main.js -->
+<script src="lib/angular/angular.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/services.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/directives.js"></script>
+<!-- endbuild -->
+</body>
+</html>

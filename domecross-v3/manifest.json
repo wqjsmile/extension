@@ -1,0 +1,42 @@
+{
+    "manifest_version": 3,
+    "name": "Domecross",
+    "version": "8.10.12",
+    "description": "专门为网站测试员提供的插件，可模拟网站多地点打开效果和进行访问速度评估。",
+    "icons": {
+        "16": "images/domecross/logos/logo_green.png",
+        "48": "images/domecross/logos/logo_green.png",
+        "128": "images/domecross/logos/logo_green.png"
+    },
+    "action": {
+        "default_icon": {
+            "19": "images/domecross/logos/logo_green.png",
+            "38": "images/domecross/logos/logo_green.png"
+        },
+        "default_title": "Domecross",
+        "default_popup": "popup.html"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "permissions": [
+        "proxy",
+        "tabs",
+        "cookies",
+        "notifications",
+        "storage",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "http://*.lubotv.com/",
+        "https://*.lubotv.com/",
+        "https://cdn.lubotv.com/*",
+        "https://log.lubotv.com/*",
+        "https://cfgs.lubotv.com/*",
+        "https://alipay.lubotv.com/*",
+        "https://wap.lubotv.com/*"
+    ],
+    "background": {
+        "service_worker": "service-worker.js"
+    }
+}
