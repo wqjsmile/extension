@@ -66,7 +66,7 @@ rocket.factory("baseService",["$rootScope","$timeout","popupService","net","noti
         await loadCurrentServerInfo();
         
         // 设置代理模式按钮状态
-        updateProxyModeButtons(currentProxyMode);
+        await updateProxyModeButtons(currentProxyMode);
 
         console.log('BaseService初始化完成');
     }
@@ -124,22 +124,38 @@ rocket.factory("baseService",["$rootScope","$timeout","popupService","net","noti
         }
     }
 
-    function updateProxyModeButtons(mode) {
+    async function updateProxyModeButtons(mode) {
         $rootScope.proxyModeAlways = "btn-default";
         $rootScope.proxyModeSmarty = "btn-default"; 
         $rootScope.proxyModeClose = "btn-default";
 
-        switch(mode) {
-            case 'always':
-                $rootScope.proxyModeAlways = "btn-success";
-                break;
-            case 'smarty':
-                $rootScope.proxyModeSmarty = "btn-success";
-                break;
-            case 'close':
-            default:
-                $rootScope.proxyModeClose = "btn-success";
-                break;
+        // 获取网站名称，如果websitenameen未定义则使用默认值
+        const siteName = (typeof websitenameen !== 'undefined') ? websitenameen : 'domecross';
+
+        try {
+            switch(mode) {
+                case 'always':
+                    $rootScope.proxyModeAlways = "btn-success";
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + siteName + "/logos/logo_green.png"
+                    });
+                    break;
+                case 'smarty':
+                    $rootScope.proxyModeSmarty = "btn-warning";
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + siteName + "/logos/logo_blue.png"
+                    });
+                    break;
+                case 'close':
+                default:
+                    $rootScope.proxyModeClose = "btn-darkgrey";
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + siteName + "/logos/logo_grey.png"
+                    });
+                    break;
+            }
+        } catch (error) {
+            console.warn('updateProxyModeButtons: 设置图标失败:', error);
         }
     }
 
@@ -290,8 +306,11 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
             
             // 从chrome.storage获取服务器列表
             let serverList = await window.storageAdapter.get('serverList');
-            if (!serverList) {
-                // 如果chrome.storage中没有，尝试从localStorage获取
+            
+            // 确保serverList是数组
+            if (!Array.isArray(serverList)) {
+                console.log('changeLine: chrome.storage中的serverList不是数组，尝试从localStorage获取');
+                // 如果chrome.storage中没有或不是数组，尝试从localStorage获取
                 const svlist = localStorage.getItem('svlist');
                 if (svlist) {
                     try {
@@ -301,10 +320,13 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
                         console.error('解析localStorage中的服务器列表失败:', e);
                         serverList = [];
                     }
+                } else {
+                    serverList = [];
                 }
             }
             
-            if (serverList && serverList.length > 0) {
+            // 确保serverList是数组且不为空
+            if (Array.isArray(serverList) && serverList.length > 0) {
                 // 找到对应的服务器
                 const targetServer = serverList.find(server => server.sn === sn);
                 if (targetServer) {
@@ -354,8 +376,11 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
             
             // 从chrome.storage获取服务器列表
             let serverList = await window.storageAdapter.get('serverList');
-            if (!serverList) {
-                // 如果chrome.storage中没有，尝试从localStorage获取
+            
+            // 确保serverList是数组
+            if (!Array.isArray(serverList)) {
+                console.log('getProxyInfo: chrome.storage中的serverList不是数组，尝试从localStorage获取');
+                // 如果chrome.storage中没有或不是数组，尝试从localStorage获取
                 const svlist = localStorage.getItem('svlist');
                 if (svlist) {
                     try {
@@ -365,10 +390,12 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
                         console.error('解析localStorage中的服务器列表失败:', e);
                         serverList = [];
                     }
+                } else {
+                    serverList = [];
                 }
             }
             
-            if (serverList && serverList.length > 0) {
+            if (Array.isArray(serverList) && serverList.length > 0) {
                 // 找到对应的服务器并设置position
                 const targetServer = serverList.find(server => server.sn === sn);
                 if (targetServer && targetServer.position && targetServer.position !== "undefined" && targetServer.position !== "false") {
@@ -414,9 +441,10 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
                 $rootScope.$apply();
                 
                 // 设置图标
+                const siteName = (typeof websitenameen !== 'undefined') ? websitenameen : 'domecross';
                 try {
                     await window.chromeAdapter.setIcon({
-                        path: "images/" + websitenameen + "/logos/logo_green.png"
+                        path: "images/" + siteName + "/logos/logo_green.png"
                     });
                 } catch (error) {
                     console.warn('设置图标失败:', error);
@@ -426,15 +454,35 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
             } else if (mode === "smarty") {
                 // 按需代理
                 $rootScope.proxyModeAlways = $rootScope.proxyModeClose = "btn-default";
-                $rootScope.proxyModeSmarty = "btn-success";
+                $rootScope.proxyModeSmarty = "btn-warning";
                 $rootScope.$apply();
+                
+                // 设置图标
+                const siteName = (typeof websitenameen !== 'undefined') ? websitenameen : 'domecross';
+                try {
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + siteName + "/logos/logo_blue.png"
+                    });
+                } catch (error) {
+                    console.warn('设置图标失败:', error);
+                }
                 
                 await setSmarty();
             } else {
                 // 关闭代理
                 $rootScope.proxyModeAlways = $rootScope.proxyModeSmarty = "btn-default";
-                $rootScope.proxyModeClose = "btn-success";
+                $rootScope.proxyModeClose = "btn-darkgrey";
                 $rootScope.$apply();
+                
+                // 设置图标
+                const siteName = (typeof websitenameen !== 'undefined') ? websitenameen : 'domecross';
+                try {
+                    await window.chromeAdapter.setIcon({
+                        path: "images/" + siteName + "/logos/logo_grey.png"
+                    });
+                } catch (error) {
+                    console.warn('设置图标失败:', error);
+                }
                 
                 await setClose();
             }
@@ -450,14 +498,68 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
     }
     
     /**
+     * 获取服务器信息
+     * V3改造说明: 从localStorage解析代理服务器配置
+     */
+    function getServerInfo() {
+        try {
+            if (!localStorage.position) {
+                console.warn('getServerInfo: localStorage.position未设置');
+                return null;
+            }
+            
+            // 使用jerry函数解密position
+            const decryptedPosition = jerry(localStorage.position);
+            if (!decryptedPosition) {
+                console.warn('getServerInfo: 解密position失败');
+                return null;
+            }
+            
+            // 解析代理服务器信息 (格式通常是 "HTTP ip:port" 或类似)
+            const parts = decryptedPosition.trim().split(' ');
+            if (parts.length >= 2) {
+                const type = parts[0].toLowerCase(); // http, https, socks5等
+                const hostPort = parts[1];
+                const [ip, port] = hostPort.split(':');
+                
+                return {
+                    type: type,
+                    ip: ip,
+                    port: port
+                };
+            } else {
+                console.warn('getServerInfo: 无法解析代理服务器信息:', decryptedPosition);
+                return null;
+            }
+        } catch (error) {
+            console.error('getServerInfo失败:', error);
+            return null;
+        }
+    }
+    
+    /**
      * 设置全局代理
      * V3改造说明: 参考V2版本的setAlways逻辑
      */
     async function setAlways() {
         try {
             console.log('setAlways: 设置全局代理');
-            // 这里可以添加全局代理的具体实现
-            // 暂时只是占位函数
+            
+            // 获取服务器信息
+            const serverInfo = getServerInfo();
+            
+            // 调用service-worker设置代理
+            const response = await chrome.runtime.sendMessage({
+                action: 'setProxy',
+                mode: 'always',
+                serverInfo: serverInfo
+            });
+            
+            if (response && response.success) {
+                console.log('全局代理设置成功');
+            } else {
+                console.error('全局代理设置失败:', response?.error);
+            }
         } catch (error) {
             console.error('setAlways失败:', error);
         }
@@ -470,8 +572,22 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
     async function setSmarty() {
         try {
             console.log('setSmarty: 设置按需代理');
-            // 这里可以添加按需代理的具体实现
-            // 暂时只是占位函数
+            
+            // 获取服务器信息
+            const serverInfo = getServerInfo();
+            
+            // 调用service-worker设置代理
+            const response = await chrome.runtime.sendMessage({
+                action: 'setProxy',
+                mode: 'smarty',
+                serverInfo: serverInfo
+            });
+            
+            if (response && response.success) {
+                console.log('按需代理设置成功');
+            } else {
+                console.error('按需代理设置失败:', response?.error);
+            }
         } catch (error) {
             console.error('setSmarty失败:', error);
         }
@@ -484,8 +600,18 @@ rocket.factory("net",["$rootScope","$q",function($rootScope, $q){
     async function setClose() {
         try {
             console.log('setClose: 关闭代理');
-            // 这里可以添加关闭代理的具体实现
-            // 暂时只是占位函数
+            
+            // 调用service-worker关闭代理
+            const response = await chrome.runtime.sendMessage({
+                action: 'setProxy',
+                mode: 'close'
+            });
+            
+            if (response && response.success) {
+                console.log('代理关闭成功');
+            } else {
+                console.error('代理关闭失败:', response?.error);
+            }
         } catch (error) {
             console.error('setClose失败:', error);
         }

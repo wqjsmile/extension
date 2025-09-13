@@ -96,14 +96,31 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
     
     /**
      * 加载代理模式状态
-     * V3改造说明: 从chrome.storage读取状态
+     * V3改造说明: 优先从localStorage读取，确保用户设置的持久性
      */
     async function loadProxyModeStatus() {
         try {
-            const proxyMode = await window.storageAdapter.get('ProxyMode') || 'close';
-            baseService.updateProxyModeButtons(proxyMode);
+            // 优先从localStorage读取用户设置，如果没有则使用默认值
+            let proxyMode = localStorage.ProxyMode;
+            
+            if (!proxyMode) {
+                // 如果localStorage没有设置，尝试从chrome.storage读取
+                proxyMode = await window.storageAdapter.get('ProxyMode') || 'close';
+                // 将读取到的值同步到localStorage
+                if (proxyMode) {
+                    localStorage.ProxyMode = proxyMode;
+                }
+            } else {
+                // 如果localStorage有设置，同步到chrome.storage
+                await window.storageAdapter.set('ProxyMode', proxyMode);
+            }
+            
+            console.log('loadProxyModeStatus: 当前代理模式 =', proxyMode);
+            await baseService.updateProxyModeButtons(proxyMode);
         } catch (error) {
             console.error('加载代理模式状态失败:', error);
+            // 出错时使用默认值
+            await baseService.updateProxyModeButtons('close');
         }
     }
     
@@ -608,7 +625,9 @@ var log = rocket.controller("log", ["$scope", "$rootScope", "$http", "config", f
                 localStorage.expire = expire;
                 localStorage.password = spassword;
                 
-                if(level > 0 && ((!localStorage.ProxyMode) || localStorage.ProxyMode == "close")){
+                // V3改造说明: 只在首次登录或ProxyMode未设置时才自动设置为smarty
+                // 避免覆盖用户手动设置的always模式
+                if(level > 0 && !localStorage.ProxyMode){
                     localStorage.ProxyMode = "smarty";
                 }
                 location.href = "option.html";

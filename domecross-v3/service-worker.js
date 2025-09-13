@@ -261,8 +261,38 @@ function setupProxyErrorListener() {
             // 获取当前标签页URL进行判断
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (tab && tab.url) {
-                // 这里可以添加代理错误的处理逻辑
                 console.log('当前标签页:', tab.url);
+                
+                // 检查URL是否有效（参考V2版本逻辑）
+                if (isValidUrl(tab.url)) {
+                    // 设置lemonTree标记，用于重试机制
+                    await chrome.storage.local.set({ lemonTree: '1' });
+                    
+                    try {
+                        // 尝试获取备用配置
+                        const response = await fetch("https://cdn.lubotv.com/c.js");
+                        if (response.ok) {
+                            console.log('获取备用配置成功');
+                        }
+                    } catch (fetchError) {
+                        console.warn('获取备用配置失败:', fetchError);
+                    }
+                    
+                    // 重新获取服务器列表（这里可以触发服务器列表更新）
+                    console.log('代理错误，准备重新获取服务器列表');
+                    
+                    // 通知popup或其他组件进行服务器列表更新
+                    try {
+                        await chrome.runtime.sendMessage({
+                            action: 'proxyError',
+                            details: details,
+                            url: tab.url
+                        });
+                    } catch (msgError) {
+                        // 消息发送失败不影响主流程
+                        console.warn('发送代理错误消息失败:', msgError);
+                    }
+                }
             }
         } catch (error) {
             console.error('处理代理错误失败:', error);
@@ -271,11 +301,33 @@ function setupProxyErrorListener() {
 }
 
 /**
+ * 检查URL是否有效
+ * V3改造说明: 简化版本的URL有效性检查，替代tldjs.isValid
+ */
+function isValidUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        // 排除chrome内部页面和扩展页面
+        if (urlObj.protocol === 'chrome:' || 
+            urlObj.protocol === 'chrome-extension:' ||
+            urlObj.protocol === 'edge:' ||
+            urlObj.protocol === 'about:') {
+            return false;
+        }
+        // 检查是否有有效的主机名
+        return urlObj.hostname && urlObj.hostname.includes('.');
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * 设置代理模式
  * V3改造说明: 保持原有的代理设置逻辑，适配V3 API
  */
 async function setProxyMode(mode, serverInfo = null) {
     try {
+        console.log(`开始设置代理模式: ${mode}`, serverInfo);
         let config;
         
         if (mode === "close") {
@@ -297,13 +349,38 @@ async function setProxyMode(mode, serverInfo = null) {
                 pacScript: { data: pac }
             };
             
-        } else if (mode === "always" && serverInfo) {
-            // 始终代理模式
+        } else if (mode === "always" && serverInfo && serverInfo.ip && serverInfo.port) {
+            // 始终代理模式 - 与V2版本逻辑一致
+            const proxyType = serverInfo.type ? serverInfo.type.toUpperCase() : 'HTTP';
+            const proxyString = `${proxyType} ${serverInfo.ip}:${serverInfo.port}`;
+            const stored = await chrome.storage.local.get(['positioncloseproxy']);
+            const closeProxy = stored.positioncloseproxy || "DIRECT";
+            
             const pac = `
                 var FindProxyForURL = function(url, host){
                     var D = "DIRECT";
-                    var p = "${serverInfo.type.toUpperCase()} ${serverInfo.ip}:${serverInfo.port}";
-                    if (url.indexOf('lubotv') >= 0) return D;
+                    var p = "${proxyString}";
+                    var p2 = "${closeProxy}";
+                    
+                    // 局域网IP直连
+                    if (shExpMatch(host, '10.[0-9]+.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '172.[0-9]+.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '192.168.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '127.[0-9]+.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '59.110.17.206')) return D;
+                    if (shExpMatch(host, '59.110.12.144')) return D;
+                    
+                    // 特定服务直连
+                    if (dnsDomainIs(host, 'localhost')) return D;
+                    if (url.indexOf('https://www.google.com/complete/search?client=chrome-omni') == 0) return D;
+                    if (url.indexOf('http://clients1.google.com/generate_204') == 0) return D;
+                    if (url.indexOf('http://chart.apis.google.com/') == 0) return D;
+                    if (url.indexOf('http://toolbarqueries.google.com') == 0) return D;
+                    
+                    // lubotv特殊处理
+                    if (shExpMatch(url, '*.lubotv.*')) return p2;
+                    
+                    // 其他所有域名走代理
                     return p;
                 }
             `;
@@ -314,23 +391,76 @@ async function setProxyMode(mode, serverInfo = null) {
             };
             
         } else if (mode === "smarty") {
-            // 智能代理模式
-            const stored = await chrome.storage.local.get(['autoProxyList']);
+            // 智能代理模式 - 与V2版本逻辑一致
+            const stored = await chrome.storage.local.get(['autoProxyList', 'positioncloseproxy']);
             const autoProxyList = stored.autoProxyList ? stored.autoProxyList.split(',') : [];
+            const closeProxy = stored.positioncloseproxy || "DIRECT";
             
-            let conditions = autoProxyList.map(domain => 
-                `host == "${domain}" || dnsDomainIs(host, ".${domain}")`
-            ).join(' || ');
+            // 如果没有服务器信息，直接返回不设置代理
+            if (!serverInfo || !serverInfo.type || !serverInfo.ip || !serverInfo.port) {
+                console.warn('智能代理模式缺少服务器信息，跳过设置');
+                return;
+            }
             
-            const pac = `
+            const proxyString = `${serverInfo.type.toUpperCase()} ${serverInfo.ip}:${serverInfo.port}`;
+            
+            let pac = `
                 var FindProxyForURL = function(url, host){
                     var D = "DIRECT";
-                    var p = "${serverInfo ? serverInfo.type.toUpperCase() + ' ' + serverInfo.ip + ':' + serverInfo.port : 'DIRECT'}";
-                    if (url.indexOf('lubotv') >= 0) return D;
-                    if (${conditions || 'false'}) return p;
-                    return D;
-                }
+                    var p = "${proxyString}";
+                    var p2 = "${closeProxy}";
+                    
+                    // 局域网IP直连
+                    if (shExpMatch(host, '10.[0-9]+.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '172.[0-9]+.[0-9]+.[0-9]+')) return D;
+                    if (shExpMatch(host, '192.168.[0-9]+.[0-9]+')) return D;
+                    
+                    // 特定服务直连
+                    if (dnsDomainIs(host, 'localhost')) return D;
+                    if (url.indexOf('https://www.google.com/complete/search?client=chrome-omni') == 0) return D;
+                    if (url.indexOf('http://clients1.google.com/generate_204') == 0) return D;
+                    if (url.indexOf('http://chart.apis.google.com/') == 0) return D;
+                    if (url.indexOf('http://toolbarqueries.google.com') == 0) return D;
+                    
+                    // lubotv特殊处理
+                    if (url.indexOf('lubotv') >= 0) return p2;
+                    
+                    // 特定IP直连
+                    if (dnsDomainIs(host, '0.0.0.0')) return D;
+                    if (dnsDomainIs(host, '127.0.0.1:8089')) return D;
+                    if (shExpMatch(host, '59.110.17.206')) return D;
+                    if (shExpMatch(host, '59.110.12.144')) return D;
             `;
+            
+            // 添加特定网站的代理规则（与V2版本一致）
+            for (const domain of autoProxyList) {
+                if (domain.indexOf("google") >= 0) {
+                    pac += `    if (shExpMatch(url, '*google*')) return p;\n`;
+                }
+                if (domain.indexOf("twitter") >= 0) {
+                    pac += `    if (shExpMatch(url, '*twitter*')) return p;\n`;
+                }
+                if (domain.indexOf("youtube") >= 0) {
+                    pac += `    if (shExpMatch(url, '*youtube*')) return p;\n`;
+                }
+                if (domain.indexOf("tumblr") >= 0) {
+                    pac += `    if (shExpMatch(url, '*tumblr*')) return p;\n`;
+                }
+                if (domain.indexOf("facebook") >= 0) {
+                    pac += `    if (shExpMatch(url, '*facebook*')) return p;\n`;
+                }
+            }
+            
+            // 添加自动代理列表中的域名规则
+            for (const domain of autoProxyList) {
+                if (domain) {
+                    pac += `    if (shExpMatch(url, '*.${domain}/*')) return p;\n`;
+                    pac += `    if (shExpMatch(url, 'http://${domain}/*')) return p;\n`;
+                    pac += `    if (shExpMatch(url, 'https://${domain}/*')) return p;\n`;
+                }
+            }
+            
+            pac += `    return D;\n}`;
             
             config = {
                 mode: "pac_script",
@@ -339,11 +469,15 @@ async function setProxyMode(mode, serverInfo = null) {
         }
         
         if (config) {
+            console.log('代理配置:', config);
+            
             await new Promise((resolve, reject) => {
                 chrome.proxy.settings.set({value: config, scope: 'regular'}, (result) => {
                     if (chrome.runtime.lastError) {
+                        console.error('Chrome代理设置错误:', chrome.runtime.lastError);
                         reject(chrome.runtime.lastError);
                     } else {
+                        console.log('Chrome代理设置成功:', result);
                         resolve(result);
                     }
                 });
@@ -351,32 +485,187 @@ async function setProxyMode(mode, serverInfo = null) {
             
             await chrome.storage.local.set({ ProxyMode: mode });
             console.log(`代理模式设置为: ${mode}`);
+        } else {
+            console.warn('没有生成代理配置，跳过设置');
         }
         
     } catch (error) {
-        console.error('设置代理模式失败:', error);
+        console.error('设置代理模式失败:', error.message || error.toString());
+        console.error('详细错误信息:', error);
     }
 }
 
 // ===== 心跳和状态维护 =====
 /**
  * 设置心跳机制
- * V3改造说明: Service Worker可能被Chrome终止，需要定期激活
+ * V3改造说明: 实现完整的V2版本心跳逻辑，包括VIP状态检查和服务器通信
  */
 function setupHeartbeat() {
-    // 设置定时器保持service worker活跃
+    // 设置定时器保持service worker活跃并执行心跳
     setInterval(async () => {
         try {
-            // 心跳检查
-            await chrome.storage.local.set({ 
-                lastHeartbeat: Date.now() 
-            });
-            
-            console.log('心跳检查完成');
+            await performHeartbeat();
         } catch (error) {
             console.error('心跳检查失败:', error);
         }
     }, globalConfig.heart_jiange * 1000);
+}
+
+/**
+ * 执行心跳检查
+ * V3改造说明: 参考V2版本的heart()函数，完整实现VIP状态检查和服务器通信
+ */
+async function performHeartbeat() {
+    try {
+        const stored = await chrome.storage.local.get([
+            'email', 'token', 'level', 'ProxyMode', 'hearttimes', 
+            'heartTime', 'positiond', 'password'
+        ]);
+        
+        const { email, token, level, ProxyMode, password } = stored;
+        
+        // 只有VIP用户且非关闭模式才进行心跳
+        if (!email || !token || level !== "1" || ProxyMode === "close") {
+            return;
+        }
+        
+        // 更新心跳计数
+        let hearttimes = parseInt(stored.hearttimes || 1) + 1;
+        if (hearttimes >= 100000) {
+            hearttimes = 1;
+        }
+        
+        const heartNow = Date.now();
+        const heartlast = parseInt(stored.heartTime || 0);
+        const heartTi = heartNow - heartlast;
+        
+        // 检查是否到达心跳间隔
+        if (heartTi >= 1000 * globalConfig.heart_jiange) {
+            await chrome.storage.local.set({
+                hearttimes,
+                heartTime: heartNow,
+                lastHeartbeat: heartNow
+            });
+            
+            // 发送心跳请求到服务器
+            await sendHeartbeatToServer({
+                type: "99",
+                email,
+                token, 
+                password,
+                hearttimes
+            });
+            
+            console.log(`VIP心跳发送完成: ${new Date(heartNow)}`);
+        }
+        
+    } catch (error) {
+        console.error('执行心跳失败:', error);
+    }
+}
+
+/**
+ * 发送心跳到服务器
+ * V3改造说明: 使用fetch替代jQuery ajax，处理服务器响应
+ */
+async function sendHeartbeatToServer(heartbeatData) {
+    try {
+        const stored = await chrome.storage.local.get(['positiond']);
+        const url = jerry(stored.positiond);
+        
+        if (!url) {
+            console.warn('心跳URL未配置');
+            return;
+        }
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(heartbeatData)
+        });
+        
+        const result = await response.json();
+        
+        if (result) {
+            // 处理心跳响应
+            await handleHeartbeatResponse(result);
+        }
+        
+    } catch (error) {
+        console.error('发送心跳到服务器失败:', error);
+        // 心跳失败时的处理
+        await handleHeartbeatFailure();
+    }
+}
+
+/**
+ * 处理心跳响应
+ * V3改造说明: 参考V2版本的ws_send响应处理逻辑
+ */
+async function handleHeartbeatResponse(result) {
+    const type = result.type;
+    
+    if (type === "999") {
+        // 用户未登录或token过期
+        const now = Date.now();
+        const stored = await chrome.storage.local.get(['noticetime999']);
+        const lastNoticeTime = parseInt(stored.noticetime999 || 0);
+        
+        if (now - lastNoticeTime >= 1000 * 60) { // 1分钟内只提示一次
+            // 显示通知
+            await chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'images/domecross/logos/logo_grey.png',
+                title: 'Domecross',
+                message: '请先注册或登录后使用.\n感谢您的信赖,我们会更加努力.'
+            });
+            
+            // 强制关闭代理
+            await setProxyMode('close');
+            
+            // 清除用户信息
+            await chrome.storage.local.set({
+                email: '',
+                token: '',
+                level: '0',
+                expire: '',
+                noticetime999: now
+            });
+            
+            // 打开登录页面
+            await chrome.tabs.create({
+                url: 'login.html',
+                active: true
+            });
+        }
+    }
+    
+    if (type === "3") {
+        // 更新用户等级信息
+        await chrome.storage.local.set({
+            level: result.level
+        });
+    }
+}
+
+/**
+ * 处理心跳失败
+ * V3改造说明: 心跳失败时的恢复机制
+ */
+async function handleHeartbeatFailure() {
+    try {
+        // 设置lemonTree标记，用于后续重试
+        await chrome.storage.local.set({ lemonTree: '1' });
+        
+        // 尝试重新获取服务器列表
+        // 这里可以添加重新获取服务器列表的逻辑
+        console.log('心跳失败，标记需要重试');
+        
+    } catch (error) {
+        console.error('处理心跳失败时出错:', error);
+    }
 }
 
 // ===== 消息处理 =====
@@ -391,7 +680,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'setProxy':
             setProxyMode(message.mode, message.serverInfo)
                 .then(() => sendResponse({ success: true }))
-                .catch(error => sendResponse({ success: false, error: error.message }));
+                .catch(error => {
+                    console.error('setProxy消息处理失败:', error);
+                    sendResponse({ 
+                        success: false, 
+                        error: error.message || error.toString(),
+                        details: error
+                    });
+                });
             return true; // 异步响应
             
         case 'getCurrentTab':

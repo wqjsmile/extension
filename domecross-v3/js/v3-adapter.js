@@ -183,6 +183,23 @@ class ChromeAPIAdapter {
             serverInfo: serverInfo
         });
     }
+    
+    // 图标API适配
+    static async setIcon(options) {
+        try {
+            if (chrome && chrome.action && chrome.action.setIcon) {
+                // Manifest V3 使用 chrome.action.setIcon
+                return chrome.action.setIcon(options);
+            } else if (chrome && chrome.browserAction && chrome.browserAction.setIcon) {
+                // Manifest V2 使用 chrome.browserAction.setIcon
+                return chrome.browserAction.setIcon(options);
+            } else {
+                console.warn('Chrome icon API not available');
+            }
+        } catch (error) {
+            console.error('setIcon error:', error);
+        }
+    }
 }
 
 // 全局API适配器

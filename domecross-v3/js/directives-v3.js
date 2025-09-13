@@ -125,11 +125,14 @@ rocket.directive("modealways", ["baseService", function(baseService){
                     const currentServer = await window.storageAdapter.get('currentServer');
                     if (currentServer) {
                         await window.chromeAdapter.setProxy('always', currentServer);
-                        baseService.updateProxyModeButtons('always');
-                        scope.$apply();
+                        await baseService.updateProxyModeButtons('always');
                         
-                        // 重新加载页面
-                        await window.chromeAdapter.reloadTab();
+                        // 保存用户选择到存储
+                        localStorage.ProxyMode = 'always';
+                        await window.storageAdapter.set('ProxyMode', 'always');
+                        console.log('用户选择始终代理模式，已保存到存储');
+                        
+                        scope.$apply();
                     } else {
                         scope.$root.alertMessage = "请先选择一个代理服务器";
                         scope.$root.alertDivDisplay = "";
@@ -170,11 +173,14 @@ rocket.directive("modesmarty", ["baseService", function(baseService){
                     const currentServer = await window.storageAdapter.get('currentServer');
                     if (currentServer) {
                         await window.chromeAdapter.setProxy('smarty', currentServer);
-                        baseService.updateProxyModeButtons('smarty');
-                        scope.$apply();
+                        await baseService.updateProxyModeButtons('smarty');
                         
-                        // 重新加载页面
-                        await window.chromeAdapter.reloadTab();
+                        // 保存用户选择到存储
+                        localStorage.ProxyMode = 'smarty';
+                        await window.storageAdapter.set('ProxyMode', 'smarty');
+                        console.log('用户选择按需代理模式，已保存到存储');
+                        
+                        scope.$apply();
                     } else {
                         scope.$root.alertMessage = "请先选择一个代理服务器";
                         scope.$root.alertDivDisplay = "";
@@ -213,11 +219,14 @@ rocket.directive("modeclose", ["baseService", function(baseService){
             element.on("click", async function () {
                 try {
                     await window.chromeAdapter.setProxy('close');
-                    baseService.updateProxyModeButtons('close');
-                    scope.$apply();
+                    await baseService.updateProxyModeButtons('close');
                     
-                    // 重新加载页面
-                    await window.chromeAdapter.reloadTab();
+                    // 保存用户选择到存储
+                    localStorage.ProxyMode = 'close';
+                    await window.storageAdapter.set('ProxyMode', 'close');
+                    console.log('用户选择关闭代理模式，已保存到存储');
+                    
+                    scope.$apply();
                 } catch (error) {
                     console.error('关闭代理模式失败:', error);
                 }
