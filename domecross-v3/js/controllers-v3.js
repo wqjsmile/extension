@@ -141,13 +141,28 @@ var popup = rocket.controller("popup", ["$scope", "$rootScope", "baseService", "
                 }
                 console.log('从chrome.storage恢复服务器选择:', currentServer.name, 'SN:', $scope.currentServerSn);
             } else {
-                $rootScope.lineName = "请选择测试点";
-                $scope.currentServerSn = '';  // V3改造说明: 清空当前服务器SN
+                // 只有在localStorage中也没有时才设置默认值，不清除用户之前的选择
+                if (!localStorage.lineName || localStorage.lineName === "请选择测试点") {
+                    $rootScope.lineName = "请选择测试点";
+                    $scope.currentServerSn = '';
+                } else {
+                    // 保持localStorage中的选择，确保用户选择在登录/退出后保持
+                    $rootScope.lineName = localStorage.lineName;
+                    $scope.currentServerSn = localStorage.netsn || '';
+                    console.log('保持localStorage中的服务器选择:', localStorage.lineName, 'SN:', $scope.currentServerSn);
+                }
             }
         } catch (error) {
             console.error('加载服务器信息失败:', error);
-            $rootScope.lineName = "请选择测试点";
-            $scope.currentServerSn = '';  // V3改造说明: 清空当前服务器SN
+            // 出错时也不清除用户之前的选择
+            if (!localStorage.lineName || localStorage.lineName === "请选择测试点") {
+                $rootScope.lineName = "请选择测试点";
+                $scope.currentServerSn = '';
+            } else {
+                $rootScope.lineName = localStorage.lineName;
+                $scope.currentServerSn = localStorage.netsn || '';
+                console.log('出错时保持localStorage中的服务器选择:', localStorage.lineName, 'SN:', $scope.currentServerSn);
+            }
         }
     }
     

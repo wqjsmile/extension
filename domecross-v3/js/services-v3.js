@@ -103,11 +103,24 @@ rocket.factory("baseService",["$rootScope","$timeout","popupService","net","noti
                 }
                 console.log('BaseService: 从chrome.storage恢复服务器选择:', currentServer.name);
             } else {
-                $rootScope.lineName = "请选择测试点";
+                // 只有在localStorage中也没有时才设置默认值，不清除用户之前的选择
+                if (!localStorage.lineName || localStorage.lineName === "请选择测试点") {
+                    $rootScope.lineName = "请选择测试点";
+                } else {
+                    // 保持localStorage中的选择，确保用户选择在登录/退出后保持
+                    $rootScope.lineName = localStorage.lineName;
+                    console.log('BaseService: 保持localStorage中的服务器选择:', localStorage.lineName);
+                }
             }
         } catch (error) {
             console.error('BaseService: 加载服务器信息失败:', error);
-            $rootScope.lineName = "请选择测试点";
+            // 出错时也不清除用户之前的选择
+            if (!localStorage.lineName || localStorage.lineName === "请选择测试点") {
+                $rootScope.lineName = "请选择测试点";
+            } else {
+                $rootScope.lineName = localStorage.lineName;
+                console.log('BaseService: 出错时保持localStorage中的服务器选择:', localStorage.lineName);
+            }
         }
     }
 
